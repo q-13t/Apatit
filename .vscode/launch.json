@@ -1,0 +1,73 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "App",
+            "request": "launch",
+            "mainClass": "edu.chat.App",
+            "projectName": "apatite"
+        },
+        {
+            "name": "Java",
+            "type": "java",
+            "request": "launch",
+            "vmArgs": [],
+            "mainClass": "${file}",
+            "args": []
+        },
+        {
+            "name": "Java2",
+            "type": "java",
+            "request": "launch",
+            "vmArgs": [],
+            "mainClass": "${file}",
+            "args": []
+        },
+        {
+            "name": "JavaScript",
+            "type": "node",
+            "request": "launch",
+            "args": [],
+            "program": "${file}"
+        },
+        {
+            "name": "Python",
+            "type": "python",
+            "request": "launch",
+            "args": [],
+            "program": "${file}"
+        },
+        {
+            "name": "C/C++",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}\\${fileBasenameNoExtension}.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:\\Program Files\\C++\\mingw64\\bin\\gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true,
+                    "includePath": [
+                        "$(workspaceRoot)"
+                    ]
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true,
+                    "includePath": [
+                        "$(workspaceRoot)"
+                    ]
+                }
+            ],
+            "preLaunchTask": "build c++ project"
+        }
+    ]
+}
