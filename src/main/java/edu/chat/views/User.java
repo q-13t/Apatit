@@ -23,6 +23,9 @@ public class User {
     @JsonProperty("pfp")
     private int pfp;
 
+    public User() {
+    }
+
     @JsonCreator
     public User(@JsonProperty("id") int id, @JsonProperty("username") String username, @JsonProperty("password") String password, @JsonProperty("pfp") int pfp) {
         this.id = id;
