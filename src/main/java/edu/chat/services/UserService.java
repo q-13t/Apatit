@@ -1,7 +1,10 @@
 package edu.chat.services;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,16 +30,11 @@ public class UserService {
     }
 
     public boolean checkUserExists(String username) {
-        try {
-            User user = getUserByUsername(username);
-            if (user == null) {
-                return false;
-            } else {
-                return true;
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
+        User user = getUserByUsername(username);
+        if (user == null) {
             return false;
+        } else {
+            return true;
         }
     }
 
@@ -49,18 +47,86 @@ public class UserService {
             } else {
                 return false;
             }
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
             log.error(e.getMessage(), e);
             return false;
+        }
+    }
+
+    public List<User> getUsersByUsername(String username) {
+        try {
+            return jdbcTemplate.query("SELECT * FROM \"user\" WHERE user_name LIKE ?", new UserMapper(), username + "%");
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+            return null;
         }
     }
 
     public User getUserByUsername(String username) {
         try {
             return jdbcTemplate.queryForObject("SELECT * FROM \"user\" WHERE user_name = ?", new UserMapper(), username);
-        } catch (Exception e) {
+        } catch (DataAccessException e) {
             log.error(e.getMessage());
             return null;
         }
     }
+
+    public boolean deleteUser(User user) {
+        try {
+            if (!checkUserExists(user.getUsername()))
+                return false;
+            jdbcTemplate.update("DELETE FROM \"user\" WHERE user_name = ?", user.getUsername());
+            return true;
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+        }
+        return false;
+    }
+
+    public User changeUsername(User user, String newUsername) {
+        try {
+            if (!checkUserExists(user.getUsername()))
+                return null;
+            jdbcTemplate.update("UPDATE \"user\" SET user_name = ? WHERE user_name = ?", newUsername, user.getUsername());
+            return getUserByUsername(newUsername);
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
+    public User changePassword(User user, String newPassword) {
+        try {
+            if (!checkUserExists(user.getUsername()))
+                return null;
+            user.setPassword(passwordEncoder.encode(newPassword));
+            jdbcTemplate.update("UPDATE \"user\" SET \"password\" = ? WHERE user_name = ?", user.getPassword(), user.getUsername());
+            return getUserByUsername(user.getUsername());
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
+    public User getUserByID(int id) {
+        try {
+            return jdbcTemplate.queryForObject("SELECT * FROM \"user\" WHERE id = ?", new UserMapper(), id);
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+            return null;
+        }
+    }
+
+    public User changePfp(User user, String newPfp) {
+        try {
+            if (!checkUserExists(user.getUsername()))
+                return null;
+            jdbcTemplate.update("UPDATE \"user\" SET pfp = ? WHERE user_name = ?", newPfp, user.getUsername());
+            return getUserByUsername(user.getUsername());
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+        }
+        return null;
+    }
+
 }
