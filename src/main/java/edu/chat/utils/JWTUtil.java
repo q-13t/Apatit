@@ -7,11 +7,9 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
-import edu.chat.configuration.JWTConfig;
 import edu.chat.views.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -57,7 +55,7 @@ public class JWTUtil {
         return Jwts.parserBuilder().setSigningKey(getKey()).build().parseClaimsJws(token).getBody();
     }
 
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
@@ -77,8 +75,9 @@ public class JWTUtil {
         return Jwts.builder().setClaims(claims).setSubject(username).setIssuedAt(current_date).setExpiration(expiration).signWith(getKey()).compact();
     }
 
-    public Boolean validateToken(String token, User userDetails) {
+    public boolean validateToken(String token, User userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
+
 }

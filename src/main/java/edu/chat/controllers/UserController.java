@@ -5,46 +5,36 @@ import javax.validation.Valid;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import edu.chat.services.UserService;
-import edu.chat.utils.JWTUtil;
 import edu.chat.views.User;
 
 @RestController
 @RequestMapping(value = "/user")
 public class UserController {
+
     Logger log = Logger.getLogger(UserController.class.getName());
 
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JWTUtil jwtTokenUtil;
-
-    UserController() {
+    public UserController() {
     }
 
-    private String authenticate(User user) {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
-        } catch (Exception e) {
-            throw null;
-        }
-        String token = jwtTokenUtil.generateToken(user);
-        return token;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    }
-
+    // TODO: Return the WEBSOCKET TOKEN
     @RequestMapping(name = "login", value = "/login", method = RequestMethod.POST)
     public ResponseEntity<String> login(@Valid @RequestBody User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -54,7 +44,11 @@ public class UserController {
             }
             return ResponseEntity.badRequest().body(errorMessage.toString());
         } else {
-            String token = authenticate(user);
+            if (!userService.checkUserExists(user.getUsername())) {
+                return ResponseEntity.badRequest().body("User does not exist");
+            }
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            String token = userService.authenticate(user);
             if (token == null) {
                 return ResponseEntity.badRequest().body("User Invalid");
             }
@@ -71,8 +65,26 @@ public class UserController {
             }
             return ResponseEntity.badRequest().body(errorMessage.toString());
         }
-        userService.addUser(user);
-        return ResponseEntity.ok().body("User Valid");
+        if (userService.addUser(user)) {
+            String token = userService.authenticate(user);
+            if (token == null) {
+                return ResponseEntity.badRequest().body("User Invalid");
+            }
+            return ResponseEntity.ok().body(token);
+        } else {
+            return ResponseEntity.badRequest().body("User already exists");
+        }
+    }
+
+    @RequestMapping(name = "test", value = "/test", method = RequestMethod.POST)
+    public ResponseEntity<String> requestMethodName(@RequestBody String body) {
+        log.info(body);
+        JsonObject request = new Gson().fromJson(body, JsonObject.class);
+        log.info(request.get("username"));
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("test", "test");
+        return ResponseEntity.ok().body(jsonObject.toString());
     }
 
     @RequestMapping(name = "logout", value = "/logout", method = RequestMethod.POST)

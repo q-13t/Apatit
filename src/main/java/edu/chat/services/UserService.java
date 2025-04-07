@@ -1,42 +1,66 @@
 package edu.chat.services;
 
-import java.util.ArrayList;
-
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import edu.chat.utils.JWTUtil;
 import edu.chat.views.User;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserService {
     private Logger log = Logger.getLogger(UserService.class.getName());
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // TODO: Rewrite this to match springsecurity user getting from database
-        return new org.springframework.security.core.userdetails.User("test", "test", new ArrayList<>());
-    }
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JWTUtil jwtTokenUtil;
 
-    public int addUser(User user) {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public String authenticate(User user) {
+        return jwtTokenUtil.generateToken(user);
+    }
+
+    public boolean checkUserExists(String username) {
         try {
-            jdbcTemplate.update("INSERT INTO \"user\" (user_name, \"password\") VALUES (?, ?)", user.getUsername(), user.getPassword());
-            return 1;
+            User user = getUserByUsername(username);
+            if (user == null) {
+                return false;
+            } else {
+                return true;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean addUser(User user) {
+        try {
+            if (!checkUserExists(user.getUsername())) {
+                user.setPassword(passwordEncoder.encode(user.getPassword()));
+                jdbcTemplate.update("INSERT INTO \"user\" (user_name, \"password\") VALUES (?, ?)", user.getUsername(), user.getPassword());
+                return true;
+            } else {
+                return false;
+            }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            return 0;
+            return false;
         }
     }
 
     public User getUserByUsername(String username) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUserByUsername'");
+        try {
+            return jdbcTemplate.queryForObject("SELECT * FROM \"user\" WHERE user_name = ?", new UserMapper(), username);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return null;
+        }
     }
 }

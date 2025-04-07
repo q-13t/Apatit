@@ -4,5 +4,17 @@
         "jdbc"
     ],
     "java.format.settings.url": ".vscode/java-formatter.xml",
-    "maven.view": "hierarchical"
+    "maven.view": "hierarchical",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "name": "Chat_DB",
+            "database": "Chat",
+            "username": "postgres"
+        }
+    ]
 }

@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "sandbox",
+            "request": "launch",
+            "mainClass": "sandbox",
+            "projectName": "apatite"
+        },
+        {
+            "type": "java",
             "name": "App",
             "request": "launch",
             "mainClass": "edu.chat.App",
