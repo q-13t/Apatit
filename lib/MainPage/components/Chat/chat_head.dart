@@ -1,17 +1,10 @@
-import 'package:apatite/utils/Models.dart';
+import 'package:apatite/utils/models.dart';
 import 'package:flutter/material.dart';
 
 class ChatHead extends StatefulWidget {
   final ChatHeadModel chat;
-  final Function changePage;
-  final Function setChatData;
 
-  const ChatHead({
-    super.key,
-    required this.chat,
-    required this.changePage,
-    required this.setChatData,
-  });
+  const ChatHead({super.key, required this.chat});
 
   @override
   State<ChatHead> createState() => _ChatHeadState();

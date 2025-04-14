@@ -1,7 +1,7 @@
 import 'dart:developer';
 
-import 'package:apatite/MainPage/MainPageController.dart';
-import 'package:apatite/auth/AuthController.dart';
+import 'package:apatite/MainPage/main_page_controller.dart';
+import 'package:apatite/auth/auth_controller.dart';
 import 'package:flutter/material.dart';
 
 void main() {

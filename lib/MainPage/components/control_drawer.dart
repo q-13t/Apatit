@@ -1,4 +1,4 @@
-import 'package:apatite/utils/Enums.dart' show Pages;
+import 'package:apatite/utils/enums.dart' show Pages;
 import 'package:flutter/material.dart';
 
 class ControlDrawer extends StatefulWidget {
