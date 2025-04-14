@@ -26,22 +26,27 @@ class _ControlDrawerState extends State<ControlDrawer> {
             decoration: BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)),
             child: Text('Drawer Header', style: TextStyle(fontSize: 24)),
           ),
-          ListTile(
-            leading: const Icon(Icons.message),
-            title: const Text('Messages'),
-            onTap: () {
-              widget.changePage(Pages.chats);
-              widget.scaffoldKey.currentState?.closeDrawer();
-            },
+          Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.message),
+                title: const Text('Messages'),
+                onTap: () {
+                  widget.changePage(Pages.chats);
+                  widget.scaffoldKey.currentState?.closeDrawer();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.account_circle),
+                title: const Text('Profile'),
+                onTap: () {
+                  widget.changePage(Pages.profile);
+                  widget.scaffoldKey.currentState?.closeDrawer();
+                },
+              ),
+            ],
           ),
-          ListTile(
-            leading: const Icon(Icons.account_circle),
-            title: const Text('Profile'),
-            onTap: () {
-              widget.changePage(Pages.profile);
-              widget.scaffoldKey.currentState?.closeDrawer();
-            },
-          ),
+          Spacer(flex: 1),
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
