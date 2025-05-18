@@ -10,6 +10,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import edu.chat.Exceptions.ExpiredTokenException;
+import edu.chat.Exceptions.InvalidTokenException;
+import edu.chat.Exceptions.UserDoesNotExistException;
 import edu.chat.utils.JWTUtil;
 import edu.chat.views.User;
 
@@ -24,6 +27,22 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    public void validateToken(String token) throws InvalidTokenException, ExpiredTokenException, UserDoesNotExistException {
+        String username;
+        try {
+            username = jwtTokenUtil.extractUsername(token);
+        } catch (Exception e) {
+            throw new InvalidTokenException();
+        }
+        if (!checkUserExists(username)) {
+            throw new UserDoesNotExistException();
+        } else if (jwtTokenUtil.isTokenExpired(token)) {
+            throw new ExpiredTokenException();
+        } else {
+            return;
+        }
+    }
 
     public String authenticate(User user) {
         return jwtTokenUtil.generateToken(user);
@@ -127,6 +146,26 @@ public class UserService {
             log.error(e.getMessage());
         }
         return null;
+    }
+
+    public boolean checkPassword(String username, String password) {
+        try {
+            User user = getUserByUsername(username);
+            if (user == null) {
+                return false;
+            } else if (passwordEncoder.matches(password, user.getPassword())) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+    public String getUsernameByToken(String token) {
+        return jwtTokenUtil.extractUsername(token);
     }
 
 }

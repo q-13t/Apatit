@@ -7,9 +7,11 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import edu.chat.services.UserService;
 import edu.chat.views.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -19,6 +21,8 @@ import io.jsonwebtoken.security.Keys;
 @ConfigurationProperties(prefix = "jwt")
 public class JWTUtil {
 
+    @Autowired
+    private static UserService userService;
     private static String SECRET_KEY;
     private static int EXPIRATION_TIME;
 
@@ -73,11 +77,6 @@ public class JWTUtil {
         Date current_date = new Date(timeMillis);
         Date expiration = new Date(timeMillis + EXPIRATION_TIME + 1000 * 60 * 60);
         return Jwts.builder().setClaims(claims).setSubject(username).setIssuedAt(current_date).setExpiration(expiration).signWith(getKey()).compact();
-    }
-
-    public boolean validateToken(String token, User userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
 }
