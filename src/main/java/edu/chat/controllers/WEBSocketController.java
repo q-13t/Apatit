@@ -5,8 +5,6 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
@@ -17,11 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import edu.chat.routes.UserRoutes;
-import edu.chat.views.User;
+import edu.chat.services.WEBSocketService;
+import edu.chat.views.WEBSocketRequestType;
 
 @Component
 public class WEBSocketController extends WebSocketServer {
@@ -29,12 +27,11 @@ public class WEBSocketController extends WebSocketServer {
     private static HashMap<String, WebSocket> clients = new HashMap<>();
     Logger log = Logger.getLogger(WEBSocketController.class.getName());
 
-    private static enum RequestType {
-        getMessage, sendMessage, deleteMessage, updateMessage, getChats, sendFile, deleteFile, updateFile, getUsersByName,
-    }
-
     @Autowired
     private UserRoutes userService;
+
+    @Autowired
+    private WEBSocketService webSocketService;
 
     public static String getServerData() {
         return WEBSC.getAddress().getAddress().getHostAddress() + ":" + WEBSC.getPort();
@@ -95,42 +92,6 @@ public class WEBSocketController extends WebSocketServer {
         return response;
     }
 
-    private JsonObject prepareGetUsersByUsernameResponse(RequestType requestType, JsonObject request) {
-        JsonObject response = new JsonObject();
-        String searchUsername = request.get("username").getAsString();
-        String username = userService.getUsernameByToken(request.get("token").getAsString());
-        JsonObject data = request.getAsJsonObject("data");
-        if (username == null) {
-            log.error("Invalid token: " + data.get("token").getAsString());
-            response = prepareErrorResponse("Invalid token: " + data.get("token").getAsString());
-            return response;
-        }
-        if (searchUsername == null) {
-            log.error("Invalid username: " + searchUsername);
-            response = prepareErrorResponse("Invalid username: " + searchUsername);
-            return response;
-        }
-
-        List<User> usersByUsername = userService.getUsersByUsername(searchUsername);
-        if (usersByUsername == null || usersByUsername.isEmpty()) {
-            log.error("No users found with username: " + searchUsername);
-            response = prepareErrorResponse("No users found with username: " + searchUsername);
-            return response;
-        }
-
-        JsonArray list = new JsonArray();
-        for (User user : usersByUsername) {
-            JsonObject userJson = new JsonObject();
-            userJson.addProperty("id", user.getId());
-            userJson.addProperty("username", user.getUsername());
-            list.add(userJson);
-        }
-        response.addProperty("type", requestType.toString());
-        response.addProperty("users", list.toString());
-        return response;
-
-    }
-
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         log.info("New connection: " + parseUserShort(conn));
@@ -153,25 +114,28 @@ public class WEBSocketController extends WebSocketServer {
         try {
             userService.validateToken(request.get("token").getAsString());
         } catch (Exception e) {
-            log.error("Invalid token: " + e.getMessage());
-            conn.close(1000, "Invalid token: " + e.getMessage());
+            log.error("Error processing request: " + e.getMessage());
+            conn.send(prepareErrorResponse("Error processing request: " + e.getMessage()).toString());
             return;
         }
-        ;
+
         // Here all the checks passed
         JsonObject response = new JsonObject();
-        RequestType requestType = RequestType.valueOf(request.get("type").getAsString());
-        switch (requestType) {
-        case getUsersByName: {
-            response = prepareGetUsersByUsernameResponse(requestType, request);
-            break;
-        }
+        WEBSocketRequestType requestType = WEBSocketRequestType.valueOf(request.get("type").getAsString());
+        try {
+            switch (requestType) {
+            case getUsersByName: {
+                response = webSocketService.prepareGetUsersByUsernameResponse(requestType, request);
+                break;
+            }
 
-        default: {
-            response = prepareErrorResponse("Invalid request type: " + requestType.toString());
-            log.error("Invalid request type: " + requestType.toString());
-            break;
-        }
+            default: {
+                throw new UnsupportedOperationException("Unsupported request type: " + requestType);
+            }
+            }
+        } catch (Exception e) {
+            log.error("Error processing request: " + e.getMessage());
+            response = prepareErrorResponse("Error processing request: " + e.getMessage());
         }
         conn.send(response.toString());
     }
