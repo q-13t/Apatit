@@ -1,7 +1,8 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
     "cSpell.words": [
-        "jdbc"
+        "jdbc",
+        "WEBSC"
     ],
     "java.format.settings.url": ".vscode/java-formatter.xml",
     "maven.view": "hierarchical",
@@ -16,5 +17,6 @@
             "database": "Chat",
             "username": "postgres"
         }
-    ]
+    ],
+    "java.compile.nullAnalysis.mode": "automatic"
 }
