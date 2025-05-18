@@ -1,4 +1,4 @@
-package edu.chat.services;
+package edu.chat.routes;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

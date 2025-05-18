@@ -17,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.google.gson.JsonObject;
 
-import edu.chat.services.UserService;
+import edu.chat.routes.UserRoutes;
 import edu.chat.utils.JWTUtil;
 
 @Service
@@ -26,7 +26,7 @@ public class JWTFilter extends OncePerRequestFilter {
     // private Logger log = Logger.getLogger(UserController.class.getName());
 
     @Autowired
-    private UserService userService;
+    private UserRoutes userRoutes;
 
     @Autowired
     private JWTUtil jwtTokenUtil;
@@ -66,7 +66,7 @@ public class JWTFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
         try {
             String username = jwtTokenUtil.extractUsername(jwt);
-            if (!userService.checkUserExists(username)) {
+            if (!userRoutes.checkUserExists(username)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 json.addProperty("message", "User does not exist");
