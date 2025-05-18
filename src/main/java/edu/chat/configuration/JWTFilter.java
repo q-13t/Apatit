@@ -41,7 +41,7 @@ public class JWTFilter extends OncePerRequestFilter {
         SECRET_KEY = secret;
     }
 
-    private List<String> excludedUrls = Arrays.asList("//user/login", "//user/register");
+    private List<String> excludedUrls = Arrays.asList("/user/login", "/user/register");
 
     private boolean shouldNotBeFiltered(HttpServletRequest request) {
         return excludedUrls.contains(request.getRequestURI());
@@ -65,8 +65,8 @@ public class JWTFilter extends OncePerRequestFilter {
         }
         jwt = authHeader.substring(7);
         try {
-            String usermane = jwtTokenUtil.extractUsername(jwt);
-            if (!userService.checkUserExists(usermane)) {
+            String username = jwtTokenUtil.extractUsername(jwt);
+            if (!userService.checkUserExists(username)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 json.addProperty("message", "User does not exist");
