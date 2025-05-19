@@ -12,7 +12,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import edu.chat.Exceptions.ExpiredTokenException;
 import edu.chat.Exceptions.InvalidPasswordException;
+import edu.chat.Exceptions.InvalidTokenException;
 import edu.chat.Exceptions.UserDoesNotExistException;
 import edu.chat.Exceptions.UserExistsException;
 import edu.chat.Exceptions.UserInvalidException;
@@ -138,4 +140,9 @@ public class UserService {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(new Gson().toJson(list));
     }
 
+    public void validateToken(String data) throws InvalidTokenException, ExpiredTokenException, UserDoesNotExistException {
+        JsonObject map = new Gson().fromJson(data, JsonObject.class);
+        String token = map.get("token").toString();
+        userRoutes.validateToken(token);
+    }
 }

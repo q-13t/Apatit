@@ -41,7 +41,7 @@ public class JWTFilter extends OncePerRequestFilter {
         SECRET_KEY = secret;
     }
 
-    private List<String> excludedUrls = Arrays.asList("/user/login", "/user/register");
+    private List<String> excludedUrls = Arrays.asList("/user/login", "/user/register", "/user/validateToken");
 
     private boolean shouldNotBeFiltered(HttpServletRequest request) {
         return excludedUrls.contains(request.getRequestURI());
