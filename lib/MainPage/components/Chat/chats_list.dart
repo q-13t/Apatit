@@ -19,6 +19,21 @@ class _ChatsListState extends State<ChatsList> {
     ChatHeadModel(3, "Chat Name 3"),
     ChatHeadModel(4, "Chat Name 4"),
     ChatHeadModel(5, "Chat Name 5"),
+    ChatHeadModel(6, "Chat Name 6"),
+    ChatHeadModel(7, "Chat Name 7"),
+    ChatHeadModel(8, "Chat Name 8"),
+    ChatHeadModel(9, "Chat Name 9"),
+    ChatHeadModel(10, "Chat Name 10"),
+    ChatHeadModel(11, "Chat Name 11"),
+    ChatHeadModel(12, "Chat Name 12"),
+    ChatHeadModel(13, "Chat Name 13"),
+    ChatHeadModel(14, "Chat Name 14"),
+    ChatHeadModel(15, "Chat Name 15"),
+    ChatHeadModel(16, "Chat Name 16"),
+    ChatHeadModel(17, "Chat Name 17"),
+    ChatHeadModel(18, "Chat Name 18"),
+    ChatHeadModel(19, "Chat Name 19"),
+    ChatHeadModel(20, "Chat Name 20"),
   ];
 
   @override

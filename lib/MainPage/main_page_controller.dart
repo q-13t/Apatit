@@ -1,6 +1,8 @@
 import 'package:apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:apatite/MainPage/components/Chat/chats_list.dart';
 import 'package:apatite/MainPage/components/control_drawer.dart';
+import 'package:apatite/MainPage/components/new_chat/new_chat_controller.dart';
+import 'package:apatite/api/network_controller.dart';
 import 'package:apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +45,7 @@ class _MainPageControllerState extends State<MainPageController> {
           ),
           body: Center(child: ChatsList(selectChat: setChatData)),
           floatingActionButton: FloatingActionButton(
-            onPressed: () => changePage(Pages.chats),
+            onPressed: () => changePage(Pages.newChat),
             tooltip: 'Increment',
             child: const Icon(Icons.new_label_outlined),
           ),
@@ -59,11 +61,13 @@ class _MainPageControllerState extends State<MainPageController> {
           ),
           body: Center(child: Placeholder()), //TODO: Specify settings page
           floatingActionButton: FloatingActionButton(
-            onPressed: () => changePage(Pages.chats),
+            onPressed: () => {changePage(Pages.newChat)},
             tooltip: 'Increment',
             child: const Icon(Icons.new_label_outlined),
           ),
         );
+      case Pages.newChat:
+        return NewChatController(changePage: changePage);
 
       case Pages.settings:
         return Scaffold(

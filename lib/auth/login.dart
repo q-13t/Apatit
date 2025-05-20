@@ -1,12 +1,10 @@
-import 'dart:convert';
 import 'dart:developer';
 
+import 'package:apatite/api/network_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class LoginForm extends StatefulWidget {
-  final Function setJWT;
-  const LoginForm({super.key, required this.setJWT});
+  const LoginForm({super.key});
   @override
   State<LoginForm> createState() => _LoginFormState();
 }
@@ -16,20 +14,7 @@ class _LoginFormState extends State<LoginForm> {
   String password = '';
 
   Future<void> login() async {
-    log(username);
-    log(password);
-    // TODO: Implement Networking class
-    // var url = Uri.http('192.168.43.233:8080', '/user/login');
-    // var data = jsonEncode({'username': username, 'password': password});
-    // var response = await http
-    //     .post(url, body: data, headers: {'Content-Type': 'application/json'})
-    //     .onError((error, stackTrace) {
-    //       log(error.toString());
-    //       return http.Response('Error', 500);
-    //     });
-    // log('Response status: ${response.statusCode}');
-    // log('Response body: ${response.body}');
-    // widget.setJWT(response.body);
+    NetworkController.login(username, password);
   }
 
   @override
@@ -56,13 +41,7 @@ class _LoginFormState extends State<LoginForm> {
                       password = value;
                     }),
               ),
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(onPressed: login, child: Text('Login')),
-                ),
-              ),
+              Padding(padding: EdgeInsets.all(16), child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: login, child: Text('Login')))),
             ],
           ),
         ),

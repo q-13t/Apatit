@@ -1,9 +1,9 @@
+import 'package:apatite/api/network_controller.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer';
 
 class RegisterForm extends StatefulWidget {
-  const RegisterForm({super.key, required this.setJWT});
-  final Function setJWT;
+  const RegisterForm({super.key});
 
   @override
   _RegisterFormState createState() => _RegisterFormState();
@@ -14,9 +14,11 @@ class _RegisterFormState extends State<RegisterForm> {
   String password = '';
 
   void login() {
-    log(username);
-    log(password);
-    widget.setJWT('token');
+    NetworkController.register(username, password).then((response) {
+      if (response) {
+        log('Register successful');
+      }
+    });
   }
 
   @override
