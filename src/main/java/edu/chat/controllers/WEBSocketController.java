@@ -12,6 +12,7 @@ import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import com.google.gson.Gson;
@@ -33,6 +34,9 @@ public class WEBSocketController extends WebSocketServer {
     @Autowired
     private WEBSocketService webSocketService;
 
+    @Autowired
+    private ServerProperties serverProperties;
+
     public static String getServerData() {
         return WEBSC.getAddress().getAddress().getHostAddress() + ":" + WEBSC.getPort();
     }
@@ -46,7 +50,7 @@ public class WEBSocketController extends WebSocketServer {
 
     @Bean
     public WEBSocketController initController() {
-        WEBSC = new WEBSocketController(new InetSocketAddress(8081));
+        WEBSC = new WEBSocketController(new InetSocketAddress(serverProperties.getAddress(), 8081));
         WEBSC.setConnectionLostTimeout(60_000);
         WEBSC.start();
         Thread connectionStatusThread = new Thread() {
@@ -64,7 +68,7 @@ public class WEBSocketController extends WebSocketServer {
                     // for (WebSocket webSocketWorker : connections) {
                     // SB.append("\n"+webSocketWorker.getRemoteSocketAddress() );
                     // }
-                    // log.info(SB.toString());
+                    log.info(SB.toString());
                 }
             }
         };
@@ -125,7 +129,7 @@ public class WEBSocketController extends WebSocketServer {
         try {
             switch (requestType) {
             case getUsersByName: {
-                response = webSocketService.prepareGetUsersByUsernameResponse(requestType, request);
+                response = webSocketService.prepareGetUsersByUsernameResponse(requestType, request.getAsJsonObject("data"));
                 break;
             }
 

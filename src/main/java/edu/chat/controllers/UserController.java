@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import edu.chat.services.UserService;
+import edu.chat.utils.JWTUtil;
 import edu.chat.views.User;
 
 @RestController
@@ -29,14 +31,9 @@ public class UserController {
     private UserService userService;
 
     @RequestMapping(name = "validateToken", value = "/validateToken", method = RequestMethod.POST)
-    public ResponseEntity<String> requestMethodName(@RequestParam String data) {
-        try {
-            userService.validateToken(data);
-            return ResponseEntity.ok("Token is valid");
-        } catch (Exception e) {
-            log.error("Error during token validation: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body(e.getMessage());
-        }
+    public ResponseEntity<String> requestMethodName() {
+        // The response is ok, because filtering passed.
+        return ResponseEntity.ok("Token is valid");
     }
 
     @RequestMapping(name = "login", value = "/login", method = RequestMethod.POST)

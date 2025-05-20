@@ -75,7 +75,7 @@ public class JWTUtil {
     private String createToken(Map<String, Object> claims, String username) {
         long timeMillis = System.currentTimeMillis();
         Date current_date = new Date(timeMillis);
-        Date expiration = new Date(timeMillis + EXPIRATION_TIME + 1000 * 60 * 60);
+        Date expiration = new Date(timeMillis + EXPIRATION_TIME * 60 * 60 * 1000);
         return Jwts.builder().setClaims(claims).setSubject(username).setIssuedAt(current_date).setExpiration(expiration).signWith(getKey()).compact();
     }
 

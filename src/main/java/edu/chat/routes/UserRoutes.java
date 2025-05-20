@@ -81,6 +81,15 @@ public class UserRoutes {
         }
     }
 
+    public List<User> getUsersByUsernamePaginated(String username, int offset, int limit) {
+        try {
+            return jdbcTemplate.query("SELECT * FROM \"user\" WHERE user_name LIKE ? LIMIT ? OFFSET ?", new UserMapper(), username + "%", limit, offset);
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+            return null;
+        }
+    }
+
     public User getUserByUsername(String username) {
         try {
             return jdbcTemplate.queryForObject("SELECT * FROM \"user\" WHERE user_name = ?", new UserMapper(), username);

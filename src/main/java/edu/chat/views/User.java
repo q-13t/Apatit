@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.JsonObject;
 
 public class User {
 
@@ -64,6 +65,15 @@ public class User {
 
     public void setPfp(int pfp) {
         this.pfp = pfp;
+    }
+
+    public JsonObject toJson() {
+        JsonObject json = new JsonObject();
+        json.addProperty("id", id);
+        json.addProperty("username", username);
+        json.addProperty("password", password);
+        json.addProperty("pfp", pfp);
+        return json;
     }
 
     @Override
