@@ -27,7 +27,8 @@ class _LoginFormState extends State<LoginForm> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                decoration: InputDecoration(hintText: 'Username'),
+                style: TextStyle(fontSize: 20),
+                decoration: InputDecoration(hintText: 'Username', hintStyle: TextStyle(fontSize: 20)),
                 onChanged:
                     (value) => setState(() {
                       username = value;
@@ -35,13 +36,15 @@ class _LoginFormState extends State<LoginForm> {
               ),
               SizedBox(height: 16),
               TextField(
-                decoration: InputDecoration(hintText: 'Password'),
+                style: TextStyle(fontSize: 20),
+                decoration: InputDecoration(hintText: 'Password', hintStyle: TextStyle(fontSize: 20)),
                 onChanged:
                     (value) => setState(() {
                       password = value;
                     }),
               ),
-              Padding(padding: EdgeInsets.all(16), child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: login, child: Text('Login')))),
+              Padding(padding: EdgeInsets.all(16), child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: login, child: Text('Login', style: TextStyle(fontSize: 20))))),
+              ElevatedButton(onPressed: () => {}, child: Icon(Icons.fingerprint, size: 30)),
             ],
           ),
         ),

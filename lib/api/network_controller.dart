@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:apatite/utils/enums.dart';
 import 'package:apatite/utils/toast_service.dart';
@@ -19,6 +20,13 @@ class NetworkController {
   NetworkController._();
   static final ValueNotifier<String?> jwtNotifier = ValueNotifier(null);
   static final messageStreamController = StreamController<String>.broadcast();
+  static final Map<String, Uint8List?> _pfpCache = {};
+
+  static Uint8List? getCachedPFP(String username) => _pfpCache[username];
+
+  static void setCachedPFP(String username, Uint8List? bytes) {
+    _pfpCache[username] = bytes;
+  }
 
   static bool jwtIsEmpty() => jwtNotifier.value == null || jwtNotifier.value == '';
 
@@ -109,14 +117,14 @@ class NetworkController {
     return true;
   }
 
-  static void websocketSend(Map<String, dynamic> message, WebSocketMessageType type) async {
+  static void websocketSend(Map<String, dynamic> message, WSMType type) async {
     if (jwtNotifier.value == null || jwtNotifier.value == '') {
       ToastService().showToast('WebSocket not initialized');
       setToken(null);
       return;
     }
-    var data = jsonEncode({'token': jwtNotifier.value, 'type': webSocketMessageTypeWrapper[type].toString(), 'data': message});
-    log(data);
+    var data = jsonEncode({'token': jwtNotifier.value, 'type': WSMTWrapper[type].toString(), 'data': message});
+    log("WS sending: $data");
     _channel.sink.add(data);
   }
 

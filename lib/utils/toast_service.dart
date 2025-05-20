@@ -17,17 +17,9 @@ class ToastService {
   BuildContext? _context;
 
   void showToast(String message) {
-    log(message);
+    log("Toast: $message");
     if (_context != null) {
-      toastification.show(
-        primaryColor: Colors.white,
-        foregroundColor: Colors.cyan,
-        context: _context,
-        title: Text(message),
-        autoCloseDuration: const Duration(seconds: 5),
-        backgroundColor: Colors.black87,
-        style: ToastificationStyle.minimal,
-      );
+      toastification.show(primaryColor: Colors.white, foregroundColor: Colors.cyan, context: _context, title: Text(message), autoCloseDuration: const Duration(seconds: 5), backgroundColor: Colors.black87, style: ToastificationStyle.minimal);
     } else {
       throw Exception('Context is not initialized');
     }
