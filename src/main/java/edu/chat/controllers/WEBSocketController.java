@@ -113,7 +113,7 @@ public class WEBSocketController extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        log.info("Message from " + parseUserShort(conn) + ": " + message);
+        // log.info("Message from " + parseUserShort(conn) + ": " + message);
         JsonObject request = new Gson().fromJson(message, JsonObject.class);
         try {
             userService.validateToken(request.get("token").getAsString());
@@ -130,6 +130,10 @@ public class WEBSocketController extends WebSocketServer {
             switch (requestType) {
             case getUsersByName: {
                 response = webSocketService.prepareGetUsersByUsernameResponse(requestType, request.getAsJsonObject("data"));
+                break;
+            }
+            case getPFP: {
+                response = webSocketService.prepareGetPFPResponse(requestType, request.getAsJsonObject("data"));
                 break;
             }
 
