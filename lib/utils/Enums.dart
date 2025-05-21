@@ -16,6 +16,7 @@ final messageStatusWrapper = {MessageStatus.sent: 'Sent', MessageStatus.seen: 'S
 
 enum WSMType { getMessage, sendMessage, deleteMessage, updateMessage, getChats, sendFile, deleteFile, updateFile, getUsersByName, getPFP }
 
+// ignore: non_constant_identifier_names
 final WSMTWrapper = {
   WSMType.getMessage: "getMessage",
   WSMType.sendMessage: "sendMessage",

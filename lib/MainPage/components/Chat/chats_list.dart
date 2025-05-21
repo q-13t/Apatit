@@ -8,10 +8,10 @@ class ChatsList extends StatefulWidget {
   const ChatsList({super.key, required this.selectChat});
 
   @override
-  _ChatsListState createState() => _ChatsListState();
+  ChatsListState createState() => ChatsListState();
 }
 
-class _ChatsListState extends State<ChatsList> {
+class ChatsListState extends State<ChatsList> {
   // TODO: Implement Networking chat request
   var chats = [
     ChatHeadModel(1, "Chat Name 1"),
@@ -38,14 +38,6 @@ class _ChatsListState extends State<ChatsList> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: <Widget>[
-        for (var ch in chats)
-          GestureDetector(
-            onTap: () => widget.selectChat(ch),
-            child: Card(child: ChatHead(chat: ch)),
-          ),
-      ],
-    );
+    return ListView(children: <Widget>[for (var ch in chats) GestureDetector(onTap: () => widget.selectChat(ch), child: Card(child: ChatHead(chat: ch)))]);
   }
 }

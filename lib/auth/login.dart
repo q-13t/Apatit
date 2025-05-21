@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:apatite/api/network_controller.dart';
 import 'package:flutter/material.dart';
 

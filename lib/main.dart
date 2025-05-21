@@ -1,8 +1,7 @@
-import 'dart:developer';
-
 import 'package:apatite/MainPage/main_page_controller.dart';
 import 'package:apatite/api/network_controller.dart';
 import 'package:apatite/auth/auth_controller.dart';
+import 'package:apatite/utils/logger.dart';
 import 'package:apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 
@@ -20,6 +19,15 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
+  late Logger log;
+
+  @override
+  void initState() {
+    super.initState();
+    log = Logger("MyApp");
+    Logger.setLevel(2);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -32,7 +40,7 @@ class MyAppState extends State<MyApp> {
           valueListenable: NetworkController.jwtNotifier,
           builder: (context, value, child) {
             ToastService().init(context);
-            log("JWT: ${NetworkController.jwtNotifier.value}");
+            log.debug("JWT: $value");
             if (value == null) {
               return Center(child: CircularProgressIndicator());
             } else {

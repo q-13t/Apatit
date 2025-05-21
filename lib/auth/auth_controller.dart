@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 class AuthController extends StatefulWidget {
+  const AuthController({super.key});
+
   @override
-  _AuthControllerState createState() => _AuthControllerState();
+  AuthControllerState createState() => AuthControllerState();
 }
 
-class _AuthControllerState extends State<AuthController> {
+class AuthControllerState extends State<AuthController> {
   late PageController _pageController;
 
   @override

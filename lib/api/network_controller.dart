@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:apatite/utils/enums.dart';
+import 'package:apatite/utils/logger.dart';
 import 'package:apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -22,6 +22,7 @@ class NetworkController {
   static final messageStreamController = StreamController<String>.broadcast();
   static final Map<String, Uint8List?> _pfpCache = {};
   static late SharedPreferences _prefs;
+  static late Logger _logger;
 
   static Uint8List? getCachedPFP(String username) => _pfpCache[username];
 
@@ -32,7 +33,8 @@ class NetworkController {
   static bool jwtIsEmpty() => jwtNotifier.value == null || jwtNotifier.value == '';
 
   static Future<void> init() async {
-    log("Initializing Network Controller");
+    _logger = Logger("NetworkController");
+    _logger.debug("Initializing Network Controller");
     _prefs = await SharedPreferences.getInstance();
     final token = _prefs.getString('token');
     if (token != null) {
@@ -127,7 +129,7 @@ class NetworkController {
       return;
     }
     var data = jsonEncode({'token': jwtNotifier.value, 'type': WSMTWrapper[type].toString(), 'data': message});
-    log("WS sending: $data");
+    _logger.debug("WS sending: $data");
     _channel.sink.add(data);
   }
 

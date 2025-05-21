@@ -1,24 +1,19 @@
 import 'package:apatite/api/network_controller.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
 
   @override
-  _RegisterFormState createState() => _RegisterFormState();
+  RegisterFormState createState() => RegisterFormState();
 }
 
-class _RegisterFormState extends State<RegisterForm> {
+class RegisterFormState extends State<RegisterForm> {
   String username = '';
   String password = '';
 
   void login() {
-    NetworkController.register(username, password).then((response) {
-      if (response) {
-        log('Register successful');
-      }
-    });
+    NetworkController.register(username, password);
   }
 
   @override
@@ -45,16 +40,7 @@ class _RegisterFormState extends State<RegisterForm> {
                       password = value;
                     }),
               ),
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: login,
-                    child: Text('Register'),
-                  ),
-                ),
-              ),
+              Padding(padding: EdgeInsets.all(16), child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: login, child: Text('Register')))),
             ],
           ),
         ),
