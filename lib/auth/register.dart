@@ -1,5 +1,6 @@
 import 'package:apatite/api/network_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
@@ -11,9 +12,19 @@ class RegisterForm extends StatefulWidget {
 class RegisterFormState extends State<RegisterForm> {
   String username = '';
   String password = '';
+  final secureStorage = FlutterSecureStorage();
 
   void login() {
-    NetworkController.register(username, password);
+    NetworkController.register(username, password).then(
+      (value) => {
+        if (value) {storeCredentials()},
+      },
+    );
+  }
+
+  Future<void> storeCredentials() async {
+    await secureStorage.write(key: 'username', value: username);
+    await secureStorage.write(key: 'password', value: password);
   }
 
   @override

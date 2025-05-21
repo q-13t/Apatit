@@ -42,7 +42,13 @@ class MyAppState extends State<MyApp> {
             ToastService().init(context);
             log.debug("JWT: $value");
             if (value == null) {
-              return Center(child: CircularProgressIndicator());
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  ElevatedButton(onPressed: () => {NetworkController.init()}, child: Text("Retry")),
+                ],
+              );
             } else {
               return value.isEmpty ? AuthController() : MainPageController();
             }

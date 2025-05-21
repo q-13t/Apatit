@@ -38,7 +38,11 @@ class NetworkController {
     _prefs = await SharedPreferences.getInstance();
     final token = _prefs.getString('token');
     if (token != null) {
-      NetworkController.askValidation().then((value) => NetworkController.setToken(token));
+      NetworkController.askValidation().then(
+        (value) => {
+          if (value) {NetworkController.setToken(token)} else {NetworkController.setToken('')},
+        },
+      );
     } else {
       NetworkController.setToken('');
     }
@@ -136,6 +140,7 @@ class NetworkController {
   static Future<bool> askValidation() async {
     var url = Uri.http(baseUrlHttp, '/user/validateToken');
     var response = await http.post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'});
+    _logger.debug("Validation response: ${response.statusCode}");
     return response.statusCode == 200;
   }
 }
