@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:apatite/models/me.dart';
 import 'package:apatite/utils/enums.dart';
 import 'package:apatite/utils/logger.dart';
 import 'package:apatite/utils/toast_service.dart';
@@ -24,6 +25,8 @@ class NetworkController {
   static late SharedPreferences _prefs;
   static late Logger _logger;
 
+  static late Me me;
+
   static Uint8List? getCachedPFP(String username) => _pfpCache[username];
 
   static void setCachedPFP(String username, Uint8List? bytes) {
@@ -37,12 +40,14 @@ class NetworkController {
     _logger.debug("Initializing Network Controller");
     _prefs = await SharedPreferences.getInstance();
     final token = _prefs.getString('token');
-    if (token != null) {
-      NetworkController.askValidation().then(
-        (value) => {
-          if (value) {NetworkController.setToken(token)} else {NetworkController.setToken('')},
-        },
-      );
+    if (token != null && token != '') {
+      bool valid = await NetworkController.askValidation(token);
+      if (valid) {
+        getMe(token).then((meResp) => {me = Me.fromJson(jsonDecode(meResp))});
+        NetworkController.setToken(token);
+      } else {
+        NetworkController.setToken('');
+      }
     } else {
       NetworkController.setToken('');
     }
@@ -57,7 +62,7 @@ class NetworkController {
   }
 
   static Future<void> setToken(String? token) async {
-    _prefs.setString('token', token ?? '');
+    await _prefs.setString('token', token ?? '');
     jwtNotifier.value = token;
     if (token != null) {
       _channel = WebSocketChannel.connect(Uri.parse(baseUrlWebSocket));
@@ -137,10 +142,22 @@ class NetworkController {
     _channel.sink.add(data);
   }
 
-  static Future<bool> askValidation() async {
+  static Future<String> getMe(String token) async {
+    var url = Uri.http(baseUrlHttp, '/user/getMe');
+    var response = await http.get(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'});
+    _logger.debug("Get me response: ${response.body}");
+    return response.body;
+  }
+
+  static Future<bool> askValidation(String token) async {
     var url = Uri.http(baseUrlHttp, '/user/validateToken');
-    var response = await http.post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'});
-    _logger.debug("Validation response: ${response.statusCode}");
+    var response = await http.post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'});
+    _logger.debug("Validation response: ${response.statusCode} - reason: ${response.body}");
     return response.statusCode == 200;
+  }
+
+  static void logout() {
+    me = Me(-1, "", -1);
+    setToken('');
   }
 }
