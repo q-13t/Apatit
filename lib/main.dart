@@ -20,10 +20,6 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
-  Future<bool> checkJWT() async {
-    return await NetworkController.askValidation();
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,13 +32,12 @@ class MyAppState extends State<MyApp> {
           valueListenable: NetworkController.jwtNotifier,
           builder: (context, value, child) {
             ToastService().init(context);
-            return FutureBuilder<bool>(
-              future: checkJWT(),
-              initialData: false,
-              builder: (context, snapshot) {
-                return snapshot.data! ? MainPageController() : AuthController();
-              },
-            );
+            log("JWT: ${NetworkController.jwtNotifier.value}");
+            if (value == null) {
+              return Center(child: CircularProgressIndicator());
+            } else {
+              return value.isEmpty ? AuthController() : MainPageController();
+            }
           },
         ),
       ),

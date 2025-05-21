@@ -13,7 +13,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class NetworkController {
   static NetworkController _instance = NetworkController._();
   static bool _initialized = false;
-  static String token = '';
+  static String? token;
   static late WebSocketChannel _channel;
   static String baseUrlHttp = '192.168.1.157:8080';
   static String baseUrlWebSocket = 'ws://192.168.1.157:8081';
@@ -21,6 +21,7 @@ class NetworkController {
   static final ValueNotifier<String?> jwtNotifier = ValueNotifier(null);
   static final messageStreamController = StreamController<String>.broadcast();
   static final Map<String, Uint8List?> _pfpCache = {};
+  static late SharedPreferences _prefs;
 
   static Uint8List? getCachedPFP(String username) => _pfpCache[username];
 
@@ -31,10 +32,13 @@ class NetworkController {
   static bool jwtIsEmpty() => jwtNotifier.value == null || jwtNotifier.value == '';
 
   static Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    log("Initializing Network Controller");
+    _prefs = await SharedPreferences.getInstance();
+    final token = _prefs.getString('token');
     if (token != null) {
-      NetworkController.setToken(token);
+      NetworkController.askValidation().then((value) => NetworkController.setToken(token));
+    } else {
+      NetworkController.setToken('');
     }
   }
 
@@ -47,8 +51,7 @@ class NetworkController {
   }
 
   static Future<void> setToken(String? token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token ?? '');
+    _prefs.setString('token', token ?? '');
     jwtNotifier.value = token;
     if (token != null) {
       _channel = WebSocketChannel.connect(Uri.parse(baseUrlWebSocket));
@@ -56,13 +59,13 @@ class NetworkController {
         (message) {
           messageStreamController.sink.add(message);
         },
-        onError: (error) {
+        onError: (error) async {
           ToastService().showToast('Network error: $error');
-          setToken(null);
+          await setToken(null);
         },
-        onDone: () {
+        onDone: () async {
           ToastService().showToast('No Connection To The Server');
-          setToken(null);
+          await setToken(null);
         },
       );
     }
@@ -131,7 +134,6 @@ class NetworkController {
   static Future<bool> askValidation() async {
     var url = Uri.http(baseUrlHttp, '/user/validateToken');
     var response = await http.post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'});
-    log("Token Validation: ${response.body} ${response.statusCode}");
     return response.statusCode == 200;
   }
 }
