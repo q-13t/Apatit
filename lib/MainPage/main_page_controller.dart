@@ -33,7 +33,7 @@ class _MainPageControllerState extends State<MainPageController> {
   getCurrentPage() {
     switch (selectedPage) {
       case Pages.chat:
-        return ChatView(changePage: changePage, chatData: chatData);
+        return ChatView(changePage: changePage, model: chatData);
       case Pages.chats:
         return Scaffold(
           key: _scaffoldKey,

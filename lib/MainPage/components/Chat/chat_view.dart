@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 class ChatView extends StatefulWidget {
   final Function changePage;
 
-  final ChatTileModel chatData;
+  final ChatTileModel model;
 
-  const ChatView({super.key, required this.changePage, required this.chatData});
+  const ChatView({super.key, required this.changePage, required this.model});
 
   @override
   State<ChatView> createState() => _ChatViewState();
