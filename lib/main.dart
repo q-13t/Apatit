@@ -46,7 +46,8 @@ class MyAppState extends State<MyApp> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircularProgressIndicator(),
-                  ElevatedButton(onPressed: () => {NetworkController.init()}, child: Text("Retry")),
+                  SizedBox(height: 20),
+                  ElevatedButton(onPressed: () => {NetworkController.init()}, child: Text("Retry", style: TextStyle(fontSize: 20))),
                 ],
               );
             } else {

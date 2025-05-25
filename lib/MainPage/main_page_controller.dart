@@ -1,5 +1,5 @@
 import 'package:apatite/MainPage/components/Chat/chat_view.dart';
-import 'package:apatite/MainPage/components/Chat/chats_list.dart';
+import 'package:apatite/MainPage/components/Chat/chats_controller.dart';
 import 'package:apatite/MainPage/components/control_drawer.dart';
 import 'package:apatite/MainPage/components/new_chat/new_chat_controller.dart';
 import 'package:apatite/utils/enums.dart';

@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:apatite/MainPage/components/empty_widget.dart';
 import 'package:apatite/MainPage/components/new_chat/user_tile.dart';
 import 'package:apatite/api/network_controller.dart';
-import 'package:apatite/model/user_tile_model.dart';
+import 'package:apatite/models/user_tile_model.dart';
 import 'package:apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
 
@@ -88,7 +87,16 @@ class _NewChatControllerState extends State<NewChatController> {
                       shrinkWrap: true,
                       itemCount: value.length,
                       itemBuilder: (context, index) {
-                        return Padding(padding: const EdgeInsets.symmetric(vertical: 5), child: ElevatedButton(onPressed: () => {log(value[index].username)}, child: Padding(padding: EdgeInsets.all(5), child: UserTile(key: Key(value[index].username), model: value[index]))));
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: ElevatedButton(
+                            onPressed:
+                                () => {
+                                  NetworkController.websocketSend({'user1': value[index].id, 'user2': NetworkController.me.id}, WSMType.newChatPrivate),
+                                },
+                            child: Padding(padding: EdgeInsets.all(5), child: UserTile(key: Key(value[index].username), model: value[index])),
+                          ),
+                        );
                       },
                     ),
                   );

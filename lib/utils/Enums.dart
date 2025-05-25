@@ -14,7 +14,7 @@ enum MessageStatus { sent, seen, delivered, read, failed }
 
 final messageStatusWrapper = {MessageStatus.sent: 'Sent', MessageStatus.seen: 'Seen', MessageStatus.delivered: 'Delivered', MessageStatus.read: 'Read', MessageStatus.failed: 'Failed'};
 
-enum WSMType { getMessage, sendMessage, deleteMessage, updateMessage, getChats, sendFile, deleteFile, updateFile, getUsersByName, getPFP }
+enum WSMType { getMessage, sendMessage, deleteMessage, updateMessage, getChats, sendFile, deleteFile, updateFile, getUsersByName, getPFP, newChatPrivate }
 
 // ignore: non_constant_identifier_names
 final WSMTWrapper = {
@@ -28,4 +28,5 @@ final WSMTWrapper = {
   WSMType.updateFile: "updateFile",
   WSMType.getUsersByName: "getUsersByName",
   WSMType.getPFP: "getPFP",
+  WSMType.newChatPrivate: "newChatPrivate",
 };

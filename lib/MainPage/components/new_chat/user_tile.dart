@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:apatite/api/network_controller.dart';
-import 'package:apatite/model/user_tile_model.dart';
+import 'package:apatite/models/user_tile_model.dart';
 import 'package:apatite/utils/enums.dart';
 import 'package:apatite/utils/logger.dart';
 import 'package:flutter/material.dart';

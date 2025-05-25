@@ -1,3 +1,4 @@
+import 'package:apatite/api/network_controller.dart';
 import 'package:apatite/utils/enums.dart' show Pages;
 import 'package:flutter/material.dart';
 
@@ -5,11 +6,7 @@ class ControlDrawer extends StatefulWidget {
   final Function changePage;
   final GlobalKey<ScaffoldState> scaffoldKey;
 
-  const ControlDrawer({
-    super.key,
-    required this.changePage,
-    required this.scaffoldKey,
-  });
+  const ControlDrawer({super.key, required this.changePage, required this.scaffoldKey});
 
   @override
   State<ControlDrawer> createState() => _ControlDrawerState();
@@ -22,10 +19,7 @@ class _ControlDrawerState extends State<ControlDrawer> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)),
-            child: Text('Drawer Header', style: TextStyle(fontSize: 24)),
-          ),
+          const DrawerHeader(decoration: BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)), child: Text('Drawer Header', style: TextStyle(fontSize: 24))),
           Column(
             children: [
               ListTile(
@@ -52,6 +46,14 @@ class _ControlDrawerState extends State<ControlDrawer> {
             title: const Text('Settings'),
             onTap: () {
               widget.changePage(Pages.settings);
+              widget.scaffoldKey.currentState?.closeDrawer();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('logout'),
+            onTap: () {
+              NetworkController.logout();
               widget.scaffoldKey.currentState?.closeDrawer();
             },
           ),
