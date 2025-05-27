@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
+import 'package:Apatite/MainPage/components/Chat/elements/audio_player.dart';
+import 'package:Apatite/MainPage/components/Chat/elements/video_player.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
 
@@ -71,11 +73,11 @@ class _MessageTileState extends State<MessageTile> {
   Widget buildMedia(BuildContext context, MessageModel model) {
     switch (model.type) {
       case MessageType.image:
-        return Placeholder();
+        return Image(image: MemoryImage(model.data ?? Uint8List(0)));
       case MessageType.video:
-        return Placeholder();
+        return CustomVideoPlayer(model: model);
       case MessageType.audio:
-        return Placeholder();
+        return CustomAudioPlayer(model: model);
       case MessageType.file:
         return Placeholder();
       default:

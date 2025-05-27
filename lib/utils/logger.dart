@@ -21,19 +21,19 @@ class Logger {
   }
 
   void info(String message) {
-    if (_level > 2) {
+    if (_level >= 2) {
       log('${DateTime.now()} - INFO - [$_clazz]: $message');
     }
   }
 
   void debug(String message) {
-    if (_level > 1) {
+    if (_level >= 1) {
       log('${DateTime.now()} - DEBUG - [$_clazz]: $message');
     }
   }
 
   void err(String message) {
-    if (_level > 0) {
+    if (_level >= 0) {
       log('${DateTime.now()} - ERROR - [$_clazz]: $message');
     }
   }

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:Apatite/MainPage/components/Chat/elements/message_tile.dart';
@@ -33,21 +32,23 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   @override
   void initState() {
     super.initState();
-    messages.value = List.generate(
-      20,
-      (index) => MessageModel(
-        id: index,
-        sender: index.isEven ? widget.model.id : 0,
-        data: null,
-        status: MessageStatus.values.elementAt(Random().nextInt(MessageStatus.values.length)),
-        message: List.generate(Random().nextInt(150) + 1, (index) => 'x').join(),
-        timeStamp: DateTime.now().toString(),
-        type: MessageType.values.elementAt(Random().nextInt(MessageType.values.length)),
-        isMine: index.isEven,
-      ),
-    );
+    // messages.value = List.generate(
+    //   20,
+    //   (index) => MessageModel(
+    //     id: index,
+    //     sender: index.isEven ? widget.model.id : 0,
+    //     data: null,
+    //     status: MessageStatus.values.elementAt(Random().nextInt(MessageStatus.values.length)),
+    //     message: List.generate(Random().nextInt(150) + 1, (index) => 'x').join(),
+    //     timeStamp: DateTime.now().toString(),
+    //     type: MessageType.values.elementAt(Random().nextInt(MessageType.values.length)),
+    //     isMine: index.isEven,
+    //   ),
+    // );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
     });
   }
 
@@ -63,6 +64,7 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
     _mineCurrent = MessageModel(isMine: true);
     messages.notifyListeners();
     _textController.clear();
+    clearFileSelection();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       scrollToBottom();
     });
@@ -73,25 +75,30 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   }
 
   void pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result == null) {
-      return;
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles();
+      if (result == null) {
+        return;
+      }
+      File file = File(result.files.single.path!);
+      var extension = resolveMessageType(p.extension(file.path));
+      var bytes = await file.readAsBytes();
+      _mineCurrent.data = bytes;
+      _mineCurrent.type = extension;
+      setState(() {});
+    } catch (e) {
+      _logger.err(e.toString());
     }
-    File file = File(result.files.single.path!);
-    var extension = resolveMessageType(p.extension(file.path));
-    var bytes = await file.readAsBytes();
-    _mineCurrent.data = bytes;
-    _mineCurrent.type = extension;
-    setState(() {});
   }
 
   MessageType resolveMessageType(String extension) {
+    _logger.info("Resolving extension: $extension");
     switch (extension) {
-      case "mp4" || "mov" || "mkv":
+      case ".mp4" || ".mov" || ".mkv":
         return MessageType.video;
-      case "mp3" || "wav":
+      case ".mp3" || ".wav":
         return MessageType.audio;
-      case "png" || "jpg" || "jpeg":
+      case ".png" || ".jpg" || ".jpeg":
         return MessageType.image;
       default:
         return MessageType.file;
@@ -100,11 +107,13 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
 
   void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: Duration(seconds: 2),
-        curve: Curves.easeInOut,
-      );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(seconds: 1),
+          curve: Curves.easeInOut,
+        );
+      }
     });
   }
 
