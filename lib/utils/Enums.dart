@@ -1,6 +1,12 @@
 enum Pages { profile, settings, chat, chats, newChat }
 
-final pagesWrapper = {Pages.profile: 'Profile', Pages.settings: 'Settings', Pages.chat: 'Chat', Pages.chats: 'Messages', Pages.newChat: 'New Chat'};
+final pagesWrapper = {
+  Pages.profile: 'Profile',
+  Pages.settings: 'Settings',
+  Pages.chat: 'Chat',
+  Pages.chats: 'Messages',
+  Pages.newChat: 'New Chat',
+};
 
 enum Status { online, offline }
 
@@ -8,13 +14,36 @@ final statusWrapper = {Status.online: 'Online', Status.offline: 'Offline'};
 
 enum MessageType { text, image, video, audio, file }
 
-final messageTypeWrapper = {MessageType.text: 'Text', MessageType.image: 'Image', MessageType.video: 'Video', MessageType.audio: 'Audio', MessageType.file: 'File'};
+final messageTypeWrapper = {
+  MessageType.text: 'Text',
+  MessageType.image: 'Image',
+  MessageType.video: 'Video',
+  MessageType.audio: 'Audio',
+  MessageType.file: 'File',
+};
 
-enum MessageStatus { sent, seen, delivered, read, failed }
+enum MessageStatus { sent, seen, delivered, failed }
 
-final messageStatusWrapper = {MessageStatus.sent: 'Sent', MessageStatus.seen: 'Seen', MessageStatus.delivered: 'Delivered', MessageStatus.read: 'Read', MessageStatus.failed: 'Failed'};
+final messageStatusWrapper = {
+  MessageStatus.sent: 'Sent',
+  MessageStatus.seen: 'Seen',
+  MessageStatus.delivered: 'Delivered',
+  MessageStatus.failed: 'Failed',
+};
 
-enum WSMType { getMessage, sendMessage, deleteMessage, updateMessage, getChats, sendFile, deleteFile, updateFile, getUsersByName, getPFP, newChatPrivate }
+enum WSMType {
+  getMessage,
+  sendMessage,
+  deleteMessage,
+  updateMessage,
+  getChats,
+  sendFile,
+  deleteFile,
+  updateFile,
+  getUsersByName,
+  getPFP,
+  newChatPrivate,
+}
 
 // ignore: non_constant_identifier_names
 final WSMTWrapper = {
