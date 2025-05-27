@@ -37,7 +37,7 @@ class _MainPageControllerState extends State<MainPageController> {
       case Pages.chats:
         return Scaffold(
           key: _scaffoldKey,
-          appBar: AppBar(title: const Text('Chat')),
+          appBar: AppBar(title: const Text('Chats')),
           drawer: ControlDrawer(changePage: changePage, scaffoldKey: _scaffoldKey),
           body: Center(child: ChatsList(selectChat: setChatData)),
           floatingActionButton: FloatingActionButton(onPressed: () => changePage(Pages.newChat), tooltip: 'Increment', child: const Icon(Icons.new_label_outlined)),

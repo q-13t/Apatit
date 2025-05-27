@@ -20,7 +20,7 @@ class ChatsList extends StatefulWidget {
 
 class ChatsListState extends State<ChatsList> {
   final ValueNotifier<List<ChatTileModel>> chatsNotifier = ValueNotifier([]);
-  late StreamSubscription _subscription;
+  // late StreamSubscription _subscription;
   final ScrollController _scrollController = ScrollController();
   final Logger _logger = Logger("ChatsList");
   int offset = 0;
@@ -66,7 +66,7 @@ class ChatsListState extends State<ChatsList> {
 
   @override
   void dispose() {
-    _subscription.cancel();
+    // _subscription.cancel();
     chatsNotifier.dispose();
     super.dispose();
   }
