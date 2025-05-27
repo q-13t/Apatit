@@ -1,8 +1,8 @@
-import 'package:apatite/MainPage/components/Chat/chat_view.dart';
-import 'package:apatite/MainPage/components/Chat/chats_controller.dart';
-import 'package:apatite/MainPage/components/control_drawer.dart';
-import 'package:apatite/MainPage/components/new_chat/new_chat_controller.dart';
-import 'package:apatite/utils/enums.dart';
+import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
+import 'package:Apatite/MainPage/components/Chat/chats_controller.dart';
+import 'package:Apatite/MainPage/components/control_drawer.dart';
+import 'package:Apatite/MainPage/components/new_chat/new_chat_controller.dart';
+import 'package:Apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
 
 class MainPageController extends StatefulWidget {
@@ -40,7 +40,11 @@ class _MainPageControllerState extends State<MainPageController> {
           appBar: AppBar(title: const Text('Chats')),
           drawer: ControlDrawer(changePage: changePage, scaffoldKey: _scaffoldKey),
           body: Center(child: ChatsList(selectChat: setChatData)),
-          floatingActionButton: FloatingActionButton(onPressed: () => changePage(Pages.newChat), tooltip: 'Increment', child: const Icon(Icons.new_label_outlined)),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => changePage(Pages.newChat),
+            tooltip: 'Increment',
+            child: const Icon(Icons.new_label_outlined),
+          ),
         );
 
       case Pages.profile:
@@ -49,7 +53,11 @@ class _MainPageControllerState extends State<MainPageController> {
           appBar: AppBar(title: const Text('Profile')),
           drawer: ControlDrawer(changePage: changePage, scaffoldKey: _scaffoldKey),
           body: Center(child: Placeholder()), //TODO: Specify settings page
-          floatingActionButton: FloatingActionButton(onPressed: () => {changePage(Pages.newChat)}, tooltip: 'Increment', child: const Icon(Icons.new_label_outlined)),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => {changePage(Pages.newChat)},
+            tooltip: 'Increment',
+            child: const Icon(Icons.new_label_outlined),
+          ),
         );
       case Pages.newChat:
         return NewChatController(changePage: changePage);
@@ -60,7 +68,11 @@ class _MainPageControllerState extends State<MainPageController> {
           appBar: AppBar(title: const Text('Setting')),
           drawer: ControlDrawer(changePage: changePage, scaffoldKey: _scaffoldKey),
           body: Center(child: Placeholder()), //TODO: Specify settings page
-          floatingActionButton: FloatingActionButton(onPressed: () => changePage(Pages.chats), tooltip: 'Increment', child: const Icon(Icons.new_label_outlined)),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => changePage(Pages.chats),
+            tooltip: 'Increment',
+            child: const Icon(Icons.new_label_outlined),
+          ),
         );
     }
   }

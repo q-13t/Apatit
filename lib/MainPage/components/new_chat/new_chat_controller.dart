@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:apatite/MainPage/components/empty_widget.dart';
-import 'package:apatite/MainPage/components/new_chat/user_tile.dart';
-import 'package:apatite/api/network_controller.dart';
-import 'package:apatite/models/user_tile_model.dart';
-import 'package:apatite/utils/enums.dart';
+import 'package:Apatite/MainPage/components/empty_widget.dart';
+import 'package:Apatite/MainPage/components/new_chat/user_tile.dart';
+import 'package:Apatite/api/network_controller.dart';
+import 'package:Apatite/models/user_tile_model.dart';
+import 'package:Apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
 
 class NewChatController extends StatefulWidget {
@@ -59,7 +59,10 @@ class _NewChatControllerState extends State<NewChatController> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: Text('New Chat'), leading: IconButton(onPressed: () => {widget.changePage(Pages.chats)}, icon: Icon(Icons.arrow_back))),
+      appBar: AppBar(
+        title: Text('New Chat'),
+        leading: IconButton(onPressed: () => {widget.changePage(Pages.chats)}, icon: Icon(Icons.arrow_back)),
+      ),
       body: Column(
         children: [
           TextField(
@@ -71,7 +74,11 @@ class _NewChatControllerState extends State<NewChatController> {
                     {
                       username = value,
                       offset = 0,
-                      NetworkController.websocketSend({'username': username, 'offset': offset, 'limit': limit}, WSMType.getUsersByName),
+                      NetworkController.websocketSend({
+                        'username': username,
+                        'offset': offset,
+                        'limit': limit,
+                      }, WSMType.getUsersByName),
                     },
                 },
           ),
@@ -92,9 +99,15 @@ class _NewChatControllerState extends State<NewChatController> {
                           child: ElevatedButton(
                             onPressed:
                                 () => {
-                                  NetworkController.websocketSend({'user1': value[index].id, 'user2': NetworkController.me.id}, WSMType.newChatPrivate),
+                                  NetworkController.websocketSend({
+                                    'user1': value[index].id,
+                                    'user2': NetworkController.me.id,
+                                  }, WSMType.newChatPrivate),
                                 },
-                            child: Padding(padding: EdgeInsets.all(5), child: UserTile(key: Key(value[index].username), model: value[index])),
+                            child: Padding(
+                              padding: EdgeInsets.all(5),
+                              child: UserTile(key: Key(value[index].username), model: value[index]),
+                            ),
                           ),
                         );
                       },

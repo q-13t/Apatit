@@ -1,4 +1,4 @@
-import 'package:apatite/api/network_controller.dart';
+import 'package:Apatite/api/network_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
@@ -37,7 +37,10 @@ class _LoginFormState extends State<LoginForm> {
   Future<bool> authenticateWithBiometrics() async {
     final isAvailable = await auth.canCheckBiometrics;
     if (!isAvailable) return false;
-    final didAuthenticate = await auth.authenticate(localizedReason: 'Please authenticate to continue', options: const AuthenticationOptions(biometricOnly: true));
+    final didAuthenticate = await auth.authenticate(
+      localizedReason: 'Please authenticate to continue',
+      options: const AuthenticationOptions(biometricOnly: true),
+    );
 
     return didAuthenticate;
   }
@@ -79,7 +82,13 @@ class _LoginFormState extends State<LoginForm> {
                       password = value;
                     }),
               ),
-              Padding(padding: EdgeInsets.all(16), child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: login, child: Text('Login', style: TextStyle(fontSize: 20))))),
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(onPressed: login, child: Text('Login', style: TextStyle(fontSize: 20))),
+                ),
+              ),
               ElevatedButton(onPressed: () => {handleBiometrics()}, child: Icon(Icons.fingerprint, size: 30)),
             ],
           ),

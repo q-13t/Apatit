@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:apatite/api/network_controller.dart';
-import 'package:apatite/models/user_tile_model.dart';
-import 'package:apatite/utils/enums.dart';
-import 'package:apatite/utils/logger.dart';
+import 'package:Apatite/api/network_controller.dart';
+import 'package:Apatite/models/user_tile_model.dart';
+import 'package:Apatite/utils/enums.dart';
+import 'package:Apatite/utils/logger.dart';
 import 'package:flutter/material.dart';
 
 class UserTile extends StatefulWidget {
@@ -60,7 +60,9 @@ class _UserTileState extends State<UserTile> {
             } else if (value.isEmpty) {
               return CircleAvatar(child: Icon(Icons.person));
             } else {
-              return CircleAvatar(child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.memory(value)));
+              return CircleAvatar(
+                child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.memory(value)),
+              );
             }
           },
         ),

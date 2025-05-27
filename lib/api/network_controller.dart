@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:apatite/models/me.dart';
-import 'package:apatite/utils/enums.dart';
-import 'package:apatite/utils/logger.dart';
-import 'package:apatite/utils/toast_service.dart';
+import 'package:Apatite/models/me.dart';
+import 'package:Apatite/utils/enums.dart';
+import 'package:Apatite/utils/logger.dart';
+import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';

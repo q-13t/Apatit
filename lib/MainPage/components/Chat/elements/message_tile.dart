@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:apatite/MainPage/components/Chat/chat_view.dart';
-import 'package:apatite/utils/enums.dart';
+import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
+import 'package:Apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
 
 class MessageTile extends StatefulWidget {
@@ -19,14 +19,14 @@ class _MessageTileState extends State<MessageTile> {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: widget.model.isMine ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: (widget.model.isMine ?? false) ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
         padding: const EdgeInsets.all(8.0),
         margin: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: widget.model.isMine ? Colors.cyan[700] : Colors.cyan[900],
+          color: (widget.model.isMine ?? false) ? Colors.cyan[700] : Colors.cyan[900],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,13 +53,13 @@ class _MessageTileState extends State<MessageTile> {
               child: Container(height: 2, width: double.infinity, color: Colors.cyan[500]),
             ),
             buildMedia(context, widget.model),
-            Text(widget.model.data, style: TextStyle(fontSize: 20), textAlign: TextAlign.start),
+            Text(widget.model.message ?? "", style: TextStyle(fontSize: 20), textAlign: TextAlign.start),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(widget.model.timeStamp, style: TextStyle(fontSize: 15)),
+                Text(widget.model.timeStamp ?? "", style: TextStyle(fontSize: 15)),
                 const Spacer(),
-                getIcon(context, widget.model.status),
+                getIcon(context, widget.model.status ?? MessageStatus.sent),
               ],
             ),
           ],

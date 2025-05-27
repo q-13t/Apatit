@@ -1,11 +1,15 @@
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
-import 'package:apatite/MainPage/components/Chat/elements/message_tile.dart';
-import 'package:apatite/MainPage/components/empty_widget.dart';
-import 'package:apatite/models/chat_tile_model.dart';
-import 'package:apatite/utils/enums.dart';
-import 'package:apatite/utils/logger.dart';
+import 'package:Apatite/MainPage/components/Chat/elements/message_tile.dart';
+import 'package:Apatite/MainPage/components/empty_widget.dart';
+import 'package:Apatite/models/chat_tile_model.dart';
+import 'package:Apatite/utils/enums.dart';
+import 'package:Apatite/utils/logger.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 
 class ChatView extends StatefulWidget {
   final Function changePage;
@@ -24,6 +28,7 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   String myInput = '';
   final Logger _logger = Logger("ChatView");
   final _textController = TextEditingController();
+  MessageModel _mineCurrent = MessageModel(isMine: true);
 
   @override
   void initState() {
@@ -33,8 +38,9 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
       (index) => MessageModel(
         id: index,
         sender: index.isEven ? widget.model.id : 0,
-        data: List.generate(Random().nextInt(150) + 1, (index) => 'x').join(),
+        data: null,
         status: MessageStatus.values.elementAt(Random().nextInt(MessageStatus.values.length)),
+        message: List.generate(Random().nextInt(150) + 1, (index) => 'x').join(),
         timeStamp: DateTime.now().toString(),
         type: MessageType.values.elementAt(Random().nextInt(MessageType.values.length)),
         isMine: index.isEven,
@@ -46,25 +52,53 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   }
 
   void sendMessage() {
-    addMyText(myInput);
     _logger.debug("Messages: ${myInput}");
-    // _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+
+    if ((_mineCurrent.message == null || _mineCurrent.message!.isEmpty) && _mineCurrent.data == null) return;
+    _mineCurrent.timeStamp = DateTime.now().toString();
+
+    // Send message
+
+    messages.value.add(_mineCurrent);
+    _mineCurrent = MessageModel(isMine: true);
+    messages.notifyListeners();
+    _textController.clear();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollToBottom();
+    });
   }
 
   void addMyText(String text) {
-    messages.value.add(
-      MessageModel(
-        id: messages.value.length,
-        sender: widget.model.id,
-        data: text,
-        status: MessageStatus.sent,
-        timeStamp: DateTime.now().toString(),
-        type: MessageType.text,
-        isMine: true,
-      ),
-    );
-    messages.notifyListeners();
-    _textController.clear();
+    _mineCurrent.message = text;
+  }
+
+  void pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result == null) {
+      return;
+    }
+    File file = File(result.files.single.path!);
+    var extension = resolveMessageType(p.extension(file.path));
+    var bytes = await file.readAsBytes();
+    _mineCurrent.data = bytes;
+    _mineCurrent.type = extension;
+    setState(() {});
+  }
+
+  MessageType resolveMessageType(String extension) {
+    switch (extension) {
+      case "mp4" || "mov" || "mkv":
+        return MessageType.video;
+      case "mp3" || "wav":
+        return MessageType.audio;
+      case "png" || "jpg" || "jpeg":
+        return MessageType.image;
+      default:
+        return MessageType.file;
+    }
+  }
+
+  void scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
@@ -72,6 +106,12 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
         curve: Curves.easeInOut,
       );
     });
+  }
+
+  void clearFileSelection() {
+    _mineCurrent.data = null;
+    _mineCurrent.type = null;
+    setState(() {});
   }
 
   @override
@@ -113,17 +153,21 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
                   child: TextField(
                     controller: _textController,
                     decoration: InputDecoration(hintText: 'Type a message', border: OutlineInputBorder()),
-                    onChanged: (value) => {myInput = value},
+                    onChanged: (value) => {addMyText(value)},
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.attach_file),
+                  icon: _mineCurrent.data == null ? Icon(Icons.attach_file) : Icon(Icons.clear),
                   style: ButtonStyle(
                     shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
                     backgroundColor: WidgetStateProperty.all(Colors.cyan[900]),
                   ),
                   onPressed: () {
-                    // Handle attach button press
+                    if (_mineCurrent.data == null) {
+                      pickFile();
+                    } else {
+                      clearFileSelection();
+                    }
                   },
                 ),
                 IconButton(
@@ -146,26 +190,19 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
 }
 
 class MessageModel {
-  final int id;
-  final int sender;
-  final String data;
-  final MessageStatus status;
-  final String timeStamp;
-  final MessageType type;
-  final bool isMine;
+  int? id;
+  int? sender;
+  Uint8List? data;
+  String? message;
+  MessageStatus? status;
+  String? timeStamp;
+  MessageType? type;
+  bool? isMine;
 
-  MessageModel({
-    required this.id,
-    required this.sender,
-    required this.data,
-    required this.status,
-    required this.timeStamp,
-    required this.type,
-    required this.isMine,
-  });
+  MessageModel({this.id, this.sender, this.data, this.message, this.status, this.timeStamp, this.type, this.isMine});
 
   @override
   String toString() {
-    return 'MessageModel{id: $id, sender: $sender, data: $data, status: $status, timeStamp: $timeStamp, type: $type, isMine: $isMine}';
+    return 'MessageModel{id: $id, sender: $sender,  message: $message, status: $status, timeStamp: $timeStamp, type: $type, isMine: $isMine}';
   }
 }

@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:apatite/MainPage/components/Chat/chat_tile.dart';
-import 'package:apatite/MainPage/components/empty_widget.dart';
-import 'package:apatite/api/network_controller.dart';
-import 'package:apatite/models/chat_tile_model.dart';
-import 'package:apatite/utils/enums.dart';
-import 'package:apatite/utils/logger.dart';
+import 'package:Apatite/MainPage/components/Chat/chat_tile.dart';
+import 'package:Apatite/MainPage/components/empty_widget.dart';
+import 'package:Apatite/api/network_controller.dart';
+import 'package:Apatite/models/chat_tile_model.dart';
+import 'package:Apatite/utils/enums.dart';
+import 'package:Apatite/utils/logger.dart';
 import 'package:flutter/material.dart';
 
 class ChatsList extends StatefulWidget {

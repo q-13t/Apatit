@@ -1,5 +1,5 @@
-import 'package:apatite/api/network_controller.dart';
-import 'package:apatite/utils/enums.dart' show Pages;
+import 'package:Apatite/api/network_controller.dart';
+import 'package:Apatite/utils/enums.dart' show Pages;
 import 'package:flutter/material.dart';
 
 class ControlDrawer extends StatefulWidget {
@@ -19,7 +19,10 @@ class _ControlDrawerState extends State<ControlDrawer> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          const DrawerHeader(decoration: BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)), child: Text('Drawer Header', style: TextStyle(fontSize: 24))),
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)),
+            child: Text('Drawer Header', style: TextStyle(fontSize: 24)),
+          ),
           Column(
             children: [
               ListTile(

@@ -1,5 +1,5 @@
-import 'package:apatite/auth/login.dart';
-import 'package:apatite/auth/register.dart';
+import 'package:Apatite/auth/login.dart';
+import 'package:Apatite/auth/register.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 

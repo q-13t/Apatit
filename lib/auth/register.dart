@@ -1,4 +1,4 @@
-import 'package:apatite/api/network_controller.dart';
+import 'package:Apatite/api/network_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -51,7 +51,13 @@ class RegisterFormState extends State<RegisterForm> {
                       password = value;
                     }),
               ),
-              Padding(padding: EdgeInsets.all(16), child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: login, child: Text('Register')))),
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(onPressed: login, child: Text('Register')),
+                ),
+              ),
             ],
           ),
         ),
