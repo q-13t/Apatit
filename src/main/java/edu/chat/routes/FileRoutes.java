@@ -36,7 +36,7 @@ public class FileRoutes {
         try {
             return jdbcTemplate.queryForObject("SELECT * FROM file WHERE id = ?", new FIleMapper(), id);
         } catch (DataAccessException e) {
-            log.error(e.getMessage());
+            log.error("File not found");
             return null;
         }
     }
