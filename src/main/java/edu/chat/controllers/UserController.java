@@ -1,5 +1,6 @@
 package edu.chat.controllers;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.apache.log4j.Logger;
@@ -15,10 +16,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import edu.chat.services.UserService;
-import edu.chat.utils.JWTUtil;
 import edu.chat.views.User;
 
 @RestController
@@ -29,6 +28,16 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @RequestMapping(name = "getMe", value = "/getMe", method = RequestMethod.GET)
+    public ResponseEntity<String> requestMethodName(HttpServletRequest request) {
+        try {
+            return userService.getMe(request.getHeader("Authorization").substring(7));
+        } catch (Exception e) {
+            log.error("Error during authentication: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body(e.getMessage());
+        }
+    }
 
     @RequestMapping(name = "validateToken", value = "/validateToken", method = RequestMethod.POST)
     public ResponseEntity<String> requestMethodName() {
