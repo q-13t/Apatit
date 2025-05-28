@@ -20,7 +20,7 @@ import com.google.gson.JsonObject;
 
 import edu.chat.routes.UserRoutes;
 import edu.chat.services.WEBSocketService;
-import edu.chat.views.WEBSocketRequestType;
+import edu.chat.views.enums.WEBSocketRequestType;
 
 @Component
 public class WEBSocketController extends WebSocketServer {
@@ -126,14 +126,27 @@ public class WEBSocketController extends WebSocketServer {
         // Here all the checks passed
         JsonObject response = new JsonObject();
         WEBSocketRequestType requestType = WEBSocketRequestType.valueOf(request.get("type").getAsString());
+        JsonObject data = request.getAsJsonObject("data");
         try {
             switch (requestType) {
             case getUsersByName: {
-                response = webSocketService.prepareGetUsersByUsernameResponse(requestType, request.getAsJsonObject("data"));
+                response = webSocketService.prepareGetUsersByUsernameResponse(requestType, data);
                 break;
             }
             case getPFP: {
-                response = webSocketService.prepareGetPFPResponse(requestType, request.getAsJsonObject("data"));
+                response = webSocketService.prepareGetPFPResponse(requestType, data);
+                break;
+            }
+            case newChatPrivate: {
+                response = webSocketService.prepareNewChatPrivateResponse(requestType, data);
+                break;
+            }
+            case getChats: {
+                response = webSocketService.prepareGetChatsResponse(requestType, data, request.get("token").getAsString());
+                break;
+            }
+            case sendMessage: {
+                response = webSocketService.prepareSendMessageResponse(requestType, data);
                 break;
             }
 
