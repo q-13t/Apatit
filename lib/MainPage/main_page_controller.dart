@@ -54,7 +54,7 @@ class _MainPageControllerState extends State<MainPageController> {
           key: _scaffoldKey,
           appBar: AppBar(title: const Text('Profile')),
           drawer: ControlDrawer(changePage: changePage, scaffoldKey: _scaffoldKey),
-          body: Center(child: Placeholder()), //TODO: Specify settings page
+          body: Center(child: Placeholder()), //TODO: Specify profile page
           floatingActionButton: FloatingActionButton(
             onPressed: () => {changePage(Pages.newChat)},
             tooltip: 'Increment',

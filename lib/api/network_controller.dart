@@ -25,7 +25,9 @@ class NetworkController {
   static late SharedPreferences _prefs;
   static late Logger _logger;
 
-  static late Me me;
+  static late Me? _me = Me(-1, "User", -1);
+
+  static Me? get me => _me;
 
   static Uint8List? getCachedPFP(String username) => _pfpCache[username];
 
@@ -43,7 +45,7 @@ class NetworkController {
     if (token != null && token != '') {
       bool valid = await NetworkController.askValidation(token);
       if (valid) {
-        getMe(token).then((meResp) => {me = Me.fromJson(jsonDecode(meResp))});
+        _getMe(token).then((meResp) => {_me = Me.fromJson(jsonDecode(meResp))});
         NetworkController.setToken(token);
       } else {
         NetworkController.setToken('');
@@ -100,7 +102,10 @@ class NetworkController {
   static Future<bool> login(String username, String password) async {
     var url = Uri.http(baseUrlHttp, '/user/login');
     var data = jsonEncode({'username': username, 'password': password});
-    var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((error, stackTrace) {
+    var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((
+      error,
+      stackTrace,
+    ) {
       return http.Response('Error', 500);
     });
     if (response.statusCode != 200) {
@@ -117,7 +122,10 @@ class NetworkController {
   static Future<bool> register(String username, String password) async {
     var url = Uri.http(baseUrlHttp, '/user/register');
     var data = jsonEncode({'username': username, 'password': password});
-    var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((error, stackTrace) {
+    var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((
+      error,
+      stackTrace,
+    ) {
       return http.Response('Error', 500);
     });
     if (response.statusCode != 200) {
@@ -142,7 +150,7 @@ class NetworkController {
     _channel.sink.add(data);
   }
 
-  static Future<String> getMe(String token) async {
+  static Future<String> _getMe(String token) async {
     var url = Uri.http(baseUrlHttp, '/user/getMe');
     var response = await http.get(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'});
     _logger.debug("Get me response: ${response.body}");
@@ -151,13 +159,16 @@ class NetworkController {
 
   static Future<bool> askValidation(String token) async {
     var url = Uri.http(baseUrlHttp, '/user/validateToken');
-    var response = await http.post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'});
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+    );
     _logger.debug("Validation response: ${response.statusCode} - reason: ${response.body}");
     return response.statusCode == 200;
   }
 
   static void logout() {
-    me = Me(-1, "", -1);
+    _me = Me(-1, "", -1);
     setToken('');
   }
 }
