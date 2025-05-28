@@ -145,4 +145,10 @@ public class UserService {
         String token = map.get("token").toString();
         userRoutes.validateToken(token);
     }
+
+    public ResponseEntity<String> getMe(String token) {
+        String username = userRoutes.getUsernameByToken(token);
+        User userByUsername = userRoutes.getUserByUsername(username);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(new Gson().toJson(userByUsername));
+    }
 }
