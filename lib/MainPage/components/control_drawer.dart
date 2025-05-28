@@ -16,49 +16,72 @@ class _ControlDrawerState extends State<ControlDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: <Widget>[
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)),
-            child: Text('Drawer Header', style: TextStyle(fontSize: 24)),
-          ),
-          Column(
+          Row(
             children: [
-              ListTile(
-                leading: const Icon(Icons.message),
-                title: const Text('Messages'),
-                onTap: () {
-                  widget.changePage(Pages.chats);
-                  widget.scaffoldKey.currentState?.closeDrawer();
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.account_circle),
-                title: const Text('Profile'),
-                onTap: () {
-                  widget.changePage(Pages.profile);
-                  widget.scaffoldKey.currentState?.closeDrawer();
-                },
+              Expanded(
+                child: DrawerHeader(
+                  decoration: const BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)),
+                  child: Text(
+                    NetworkController.me == null ? "Username" : NetworkController.me!.username,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                ),
               ),
             ],
           ),
-          Spacer(flex: 1),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
-            onTap: () {
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.all(Color.fromARGB(95, 12, 142, 165)),
+              iconColor: WidgetStateProperty.all(Colors.white),
+              shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              minimumSize: WidgetStateProperty.all(Size(60, 60)),
+              padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: 10, horizontal: 5)),
+            ),
+            onPressed: () {
+              widget.changePage(Pages.chats);
+              widget.scaffoldKey.currentState?.closeDrawer();
+            },
+            child: Padding(
+              padding: EdgeInsets.only(left: 5),
+              child: Row(children: [const Icon(Icons.message), const Text('Chats')]),
+            ),
+          ),
+          SizedBox(height: 10),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.all(Color.fromARGB(95, 12, 142, 165)),
+              iconColor: WidgetStateProperty.all(Colors.white),
+              shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              minimumSize: WidgetStateProperty.all(Size(60, 60)),
+              padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: 10, horizontal: 5)),
+            ),
+            onPressed: () {
               widget.changePage(Pages.settings);
               widget.scaffoldKey.currentState?.closeDrawer();
             },
+            child: Padding(
+              padding: EdgeInsets.only(left: 5),
+              child: Row(children: [const Icon(Icons.settings), const Text('Settings')]),
+            ),
           ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('logout'),
-            onTap: () {
+          Spacer(),
+          ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.all(Colors.redAccent[200]),
+              iconColor: WidgetStateProperty.all(Colors.black),
+              shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              minimumSize: WidgetStateProperty.all(Size(60, 60)),
+            ),
+            onPressed: () {
               NetworkController.logout();
               widget.scaffoldKey.currentState?.closeDrawer();
             },
+            child: Padding(
+              padding: EdgeInsets.only(left: 5),
+              child: Row(children: [const Icon(Icons.logout), const Text('logout')]),
+            ),
           ),
         ],
       ),
