@@ -2,6 +2,8 @@ import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/Chat/chats_controller.dart';
 import 'package:Apatite/MainPage/components/control_drawer.dart';
 import 'package:Apatite/MainPage/components/new_chat/new_chat_controller.dart';
+import 'package:Apatite/MainPage/components/settings_page.dart';
+import 'package:Apatite/models/chat_tile_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
 
@@ -15,7 +17,7 @@ class MainPageController extends StatefulWidget {
 class _MainPageControllerState extends State<MainPageController> {
   Pages selectedPage = Pages.chats;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  var chatData;
+  late ChatTileModel chatData;
 
   setChatData(chat) {
     setState(() {
@@ -67,12 +69,7 @@ class _MainPageControllerState extends State<MainPageController> {
           key: _scaffoldKey,
           appBar: AppBar(title: const Text('Setting')),
           drawer: ControlDrawer(changePage: changePage, scaffoldKey: _scaffoldKey),
-          body: Center(child: Placeholder()), //TODO: Specify settings page
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => changePage(Pages.chats),
-            tooltip: 'Increment',
-            child: const Icon(Icons.new_label_outlined),
-          ),
+          body: Center(child: SettingsPage()),
         );
     }
   }

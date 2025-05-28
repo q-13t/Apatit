@@ -76,7 +76,7 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
 
   void pickFile() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles();
+      FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false);
       if (result == null) {
         return;
       }
