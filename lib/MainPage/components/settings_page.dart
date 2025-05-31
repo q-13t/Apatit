@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/main.dart';
+import 'package:Apatite/utils/logger.dart' show Logger;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -16,10 +19,12 @@ class _SettingsPageState extends State<SettingsPage> {
   String _newUserName = '';
   String _newPassword = '';
   File? _newPfp;
+  final Logger _logger = Logger("SettingsPageState");
+  Uint8List? _oldPfp;
 
   void updateUserData() {
     if (_newPfp == null) return;
-    NetworkController.uploadFile(_newPfp!, Main.getUuid());
+    NetworkController.uploadFile(_newPfp!, Main.getUuid() + p.extension(_newPfp!.path));
   }
 
   @override
@@ -41,10 +46,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 setState(() {});
               },
 
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: _newPfp == null ? null : FileImage(_newPfp!),
-                child: _newPfp == null ? Icon(Icons.person, size: 50) : null,
+              child: FutureBuilder(
+                future: NetworkController.getFile("1.jpg"),
+                builder: (context, snapshot) {
+                  if (_newPfp != null) {
+                    return CircleAvatar(
+                      child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.file(_newPfp!)),
+                    );
+                  } else if (snapshot.hasData) {
+                    _oldPfp = snapshot.data;
+                    return CircleAvatar(
+                      child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.memory(snapshot.data!)),
+                    );
+                  } else {
+                    return CircleAvatar(child: _oldPfp == null ? Icon(Icons.person) : Image.memory(_oldPfp!));
+                  }
+                },
               ),
             ),
           ),

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:Apatite/models/me.dart';
@@ -66,7 +65,9 @@ class NetworkController {
   }
 
   static Future<void> setToken(String? token) async {
-    await _prefs.setString('token', token ?? '');
+    if (token != null) {
+      await _prefs.setString('token', token);
+    }
     jwtNotifier.value = token;
     if (jwtIsEmpty()) {
       try {
@@ -176,10 +177,9 @@ class NetworkController {
 
   static Future<bool> askValidation(String token) async {
     var url = Uri.http(baseUrlHttp, '/user/validateToken');
-    var response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-    );
+    var response = await http
+        .post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'})
+        .onError((error, stackTrace) => http.Response('Error', 500));
     _logger.debug("Validation response: ${response.statusCode} - reason: ${response.body}");
     return response.statusCode == 200;
   }
@@ -195,7 +195,7 @@ class NetworkController {
     request.files.add(http.MultipartFile.fromBytes('file', data.readAsBytesSync(), filename: uuid));
     request.headers['Authorization'] = 'Bearer ${jwtNotifier.value}';
     var response = await request.send();
-    _logger.debug("Upload file response: ${response.statusCode} - reason: ${response.reasonPhrase}");
+    _logger.debug("Upload file response: ${response.statusCode}");
     if (response.statusCode == 200) {
       return true;
     } else {
@@ -205,7 +205,7 @@ class NetworkController {
 
   static Future<Uint8List> getFile(String? fileUuid) {
     if (fileUuid == null) return Future.value(Uint8List(0));
-    var url = Uri.http(baseUrlHttp, '/file/get/$fileUuid');
+    var url = Uri.http(baseUrlHttp, '/file', {'uuid': fileUuid});
     return http
         .get(url, headers: {'Content-Type': 'application/octet-stream', 'Authorization': 'Bearer ${jwtNotifier.value}'})
         .then((response) => response.bodyBytes);
