@@ -1,4 +1,4 @@
-package edu.chat.services;
+package edu.chat.Exceptions;
 
 public class PasswordMismatchException extends Exception {
     private static final long serialVersionUID = 6L;

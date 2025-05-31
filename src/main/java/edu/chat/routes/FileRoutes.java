@@ -3,7 +3,8 @@ package edu.chat.routes;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,13 +29,22 @@ class FIleMapper implements RowMapper<FileView> {
 
 @Service
 public class FileRoutes {
-    private Logger log = Logger.getLogger(UserRoutes.class.getName());
+    private Logger log = LogManager.getLogger(UserRoutes.class.getName());
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public FileView getFileByID(int id) {
         try {
             return jdbcTemplate.queryForObject("SELECT * FROM file WHERE id = ?", new FIleMapper(), id);
+        } catch (DataAccessException e) {
+            log.error("File not found");
+            return null;
+        }
+    }
+
+    public FileView getFileByUUID(String uuid) {
+        try {
+            return jdbcTemplate.queryForObject("SELECT * FROM file WHERE file_uuid = ?", new FIleMapper(), uuid);
         } catch (DataAccessException e) {
             log.error("File not found");
             return null;

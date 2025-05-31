@@ -1,9 +1,7 @@
 package edu.chat.controllers;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,12 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.JsonObject;
 import edu.chat.services.UserService;
 import edu.chat.views.User;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping(value = "/user")
 public class UserController {
 
-    Logger log = Logger.getLogger(UserController.class.getName());
+    private Logger log = LogManager.getLogger(UserController.class.getName());
 
     @Autowired
     private UserService userService;

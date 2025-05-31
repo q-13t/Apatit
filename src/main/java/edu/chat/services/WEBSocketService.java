@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +21,6 @@ import edu.chat.routes.ChatRoutes;
 import edu.chat.routes.FileRoutes;
 import edu.chat.routes.UserRoutes;
 import edu.chat.utils.FileOperator;
-import edu.chat.utils.JWTUtil;
 import edu.chat.views.Chat;
 import edu.chat.views.FileView;
 import edu.chat.views.User;
@@ -27,7 +28,8 @@ import edu.chat.views.enums.WEBSocketRequestType;
 
 @Service
 public class WEBSocketService {
-    Logger log = Logger.getLogger(WEBSocketService.class.getName());
+    @SuppressWarnings("unused")
+    private Logger log = LogManager.getLogger(WEBSocketService.class.getName());
 
     @Autowired
     private UserRoutes userRoutes;

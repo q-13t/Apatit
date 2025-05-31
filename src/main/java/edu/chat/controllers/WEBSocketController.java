@@ -5,7 +5,8 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
@@ -26,7 +27,7 @@ import edu.chat.views.enums.WEBSocketRequestType;
 public class WEBSocketController extends WebSocketServer {
     private static WEBSocketController WEBSC;
     private static HashMap<String, WebSocket> clients = new HashMap<>();
-    Logger log = Logger.getLogger(WEBSocketController.class.getName());
+    private static Logger log = LogManager.getLogger(WEBSocketController.class.getName());
 
     @Autowired
     private UserRoutes userService;
@@ -53,7 +54,7 @@ public class WEBSocketController extends WebSocketServer {
         WEBSC = new WEBSocketController(new InetSocketAddress(serverProperties.getAddress(), 8081));
         WEBSC.setConnectionLostTimeout(60_000);
         WEBSC.start();
-        Thread connectionStatusThread = new Thread() {
+        Thread connectionStatusThread = new Thread("WeBSocketConnectionStatusThread") {
             @Override
             public void run() {
                 StringBuilder SB = new StringBuilder();

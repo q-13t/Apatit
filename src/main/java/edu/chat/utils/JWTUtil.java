@@ -7,11 +7,12 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
-import edu.chat.services.UserService;
+import edu.chat.routes.ChatRoutes;
 import edu.chat.views.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -20,9 +21,8 @@ import io.jsonwebtoken.security.Keys;
 @Service
 @ConfigurationProperties(prefix = "jwt")
 public class JWTUtil {
+    private Logger log = LogManager.getLogger(ChatRoutes.class.getName());
 
-    @Autowired
-    private static UserService userService;
     private static String SECRET_KEY;
     private static int EXPIRATION_TIME;
 
@@ -75,7 +75,8 @@ public class JWTUtil {
     private String createToken(Map<String, Object> claims, String username) {
         long timeMillis = System.currentTimeMillis();
         Date current_date = new Date(timeMillis);
-        Date expiration = new Date(timeMillis + EXPIRATION_TIME * 60 * 60 * 1000);
+        Date expiration = new Date(timeMillis + (EXPIRATION_TIME * 60 * 60 * 1000));
+        log.info("current_date: " + current_date.toString() + " - expiration: " + expiration.toString());
         return Jwts.builder().setClaims(claims).setSubject(username).setIssuedAt(current_date).setExpiration(expiration).signWith(getKey()).compact();
     }
 

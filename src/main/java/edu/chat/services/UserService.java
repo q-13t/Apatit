@@ -15,6 +15,7 @@ import com.google.gson.JsonObject;
 import edu.chat.Exceptions.ExpiredTokenException;
 import edu.chat.Exceptions.InvalidPasswordException;
 import edu.chat.Exceptions.InvalidTokenException;
+import edu.chat.Exceptions.PasswordMismatchException;
 import edu.chat.Exceptions.UserDoesNotExistException;
 import edu.chat.Exceptions.UserExistsException;
 import edu.chat.Exceptions.UserInvalidException;

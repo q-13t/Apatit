@@ -1,11 +1,12 @@
 package edu.chat.views;
 
-import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.Id;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.JsonObject;
+
+import jakarta.validation.constraints.NotBlank;
 
 public class User {
 

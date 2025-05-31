@@ -2,7 +2,7 @@ application.properties
 .env
 target/
 *.class
-*/resources/*
+src/main/resources/files/
 
 # Ignore Eclipse files
 .classpath

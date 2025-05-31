@@ -3,15 +3,16 @@ package edu.chat.configuration;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 // import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,11 +20,19 @@ import com.google.gson.JsonObject;
 
 import edu.chat.routes.UserRoutes;
 import edu.chat.utils.JWTUtil;
+import io.micrometer.common.lang.NonNull;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 @ConfigurationProperties(prefix = "jwt")
+@WebFilter(urlPatterns = "/*", filterName = "JWTFilter")
+@Order(1)
 public class JWTFilter extends OncePerRequestFilter {
-    // private Logger log = Logger.getLogger(UserController.class.getName());
+    private Logger log = LogManager.getLogger(JWTFilter.class.getName());
 
     @Autowired
     private UserRoutes userRoutes;
@@ -41,15 +50,17 @@ public class JWTFilter extends OncePerRequestFilter {
         SECRET_KEY = secret;
     }
 
-    private List<String> excludedUrls = Arrays.asList("/user/login", "/user/register");
+    private Pattern excludedUrls = Pattern.compile("/user/login|/user/register|/actuator/.+|/$");
 
-    private boolean shouldNotBeFiltered(HttpServletRequest request) {
-        logger.info("Request URI: " + request.getRequestURI() + " - Method: " + request.getMethod() + " - Excluded: " + excludedUrls.contains(request.getRequestURI()));
-        return excludedUrls.contains(request.getRequestURI());
+    private boolean shouldNotBeFiltered(@NonNull HttpServletRequest request) {
+        Matcher matcher = excludedUrls.matcher(request.getRequestURI());
+        boolean isExcluded = matcher.matches();
+        log.info("Request URI: " + request.getRequestURI() + " - Method: " + request.getMethod() + " - Excluded: " + isExcluded);
+        return isExcluded;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         if (shouldNotBeFiltered(request)) {
             filterChain.doFilter(request, response);
             return;
