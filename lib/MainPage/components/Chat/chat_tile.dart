@@ -29,7 +29,7 @@ class _ChatTileState extends State<ChatTile> {
               CircleAvatar(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(50),
-                  child: widget.model.pfp == 0 ? Icon(Icons.person) : Image.memory(Uint8List(0)),
+                  child: widget.model.pfp == "0" ? Icon(Icons.person) : Image.memory(Uint8List(0)),
                 ),
               ),
               SizedBox(width: 10),

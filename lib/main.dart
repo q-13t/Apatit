@@ -4,10 +4,11 @@ import 'package:Apatite/auth/auth_controller.dart';
 import 'package:Apatite/utils/logger.dart';
 import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   NetworkController.init();
-  // WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -15,11 +16,14 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<StatefulWidget> createState() => MyAppState();
+  State<StatefulWidget> createState() => Main();
 }
 
-class MyAppState extends State<MyApp> {
+class Main extends State<MyApp> {
   late Logger log;
+  static const uuid = Uuid();
+
+  static String getUuid() => uuid.v4();
 
   @override
   void initState() {

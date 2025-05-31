@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:Apatite/MainPage/components/Chat/elements/message_tile.dart';
 import 'package:Apatite/MainPage/components/empty_widget.dart';
+import 'package:Apatite/main.dart';
 import 'package:Apatite/models/chat_tile_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
@@ -27,6 +27,8 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   String myInput = '';
   final Logger _logger = Logger("ChatView");
   final _textController = TextEditingController();
+
+  File? _file;
   MessageModel _mineCurrent = MessageModel(isMine: true);
 
   @override
@@ -53,9 +55,9 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   }
 
   void sendMessage() {
-    _logger.debug("Messages: ${myInput}");
+    _logger.debug("Messages: $myInput");
 
-    if ((_mineCurrent.message == null || _mineCurrent.message!.isEmpty) && _mineCurrent.data == null) return;
+    if ((_mineCurrent.message == null || _mineCurrent.message!.isEmpty) && _mineCurrent.fileUuid == null) return;
     _mineCurrent.timeStamp = DateTime.now().toString();
 
     // Send message
@@ -80,10 +82,11 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
       if (result == null) {
         return;
       }
-      File file = File(result.files.single.path!);
-      var extension = resolveMessageType(p.extension(file.path));
-      var bytes = await file.readAsBytes();
-      _mineCurrent.data = bytes;
+      _file = File(result.files.single.path!);
+      if (_file == null) return;
+      var extension = resolveMessageType(p.extension(_file!.path));
+      var fileUuid = Main.getUuid();
+      _mineCurrent.fileUuid = fileUuid;
       _mineCurrent.type = extension;
       setState(() {});
     } catch (e) {
@@ -118,7 +121,7 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   }
 
   void clearFileSelection() {
-    _mineCurrent.data = null;
+    _mineCurrent.fileUuid = null;
     _mineCurrent.type = null;
     setState(() {});
   }
@@ -166,13 +169,13 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
                   ),
                 ),
                 IconButton(
-                  icon: _mineCurrent.data == null ? Icon(Icons.attach_file) : Icon(Icons.clear),
+                  icon: _mineCurrent.fileUuid == null ? Icon(Icons.attach_file) : Icon(Icons.clear),
                   style: ButtonStyle(
                     shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
                     backgroundColor: WidgetStateProperty.all(Colors.cyan[900]),
                   ),
                   onPressed: () {
-                    if (_mineCurrent.data == null) {
+                    if (_mineCurrent.fileUuid == null) {
                       pickFile();
                     } else {
                       clearFileSelection();
@@ -201,14 +204,23 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
 class MessageModel {
   int? id;
   int? sender;
-  Uint8List? data;
+  String? fileUuid;
   String? message;
   MessageStatus? status;
   String? timeStamp;
   MessageType? type;
   bool? isMine;
 
-  MessageModel({this.id, this.sender, this.data, this.message, this.status, this.timeStamp, this.type, this.isMine});
+  MessageModel({
+    this.id,
+    this.sender,
+    this.fileUuid,
+    this.message,
+    this.status,
+    this.timeStamp,
+    this.type,
+    this.isMine,
+  });
 
   @override
   String toString() {

@@ -1,7 +1,6 @@
 import 'package:Apatite/auth/login.dart';
 import 'package:Apatite/auth/register.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 class AuthController extends StatefulWidget {
   const AuthController({super.key});
@@ -32,21 +31,7 @@ class AuthControllerState extends State<AuthController> {
         controller: _pageController,
         itemCount: 2,
         itemBuilder: (context, index) {
-          return AnimatedBuilder(
-            animation: _pageController,
-            builder: (context, child) {
-              double value = 1.0;
-              if (_pageController.position.haveDimensions) {
-                value = (_pageController.page! - index).abs();
-                value = max(0, 1 - value); // Closer to 1 means more visible
-              }
-              return Transform.scale(
-                scale: 0.95 + (0.05 * value), // Slight scale effect
-                child: Opacity(opacity: value, child: child),
-              );
-            },
-            child: index == 0 ? LoginForm() : RegisterForm(),
-          );
+          return index == 0 ? LoginForm() : RegisterForm();
         },
       ),
     );

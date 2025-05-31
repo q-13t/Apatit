@@ -1,7 +1,7 @@
 class ChatTileModel {
   final int id;
   final String name;
-  final int pfp;
+  final String pfp;
   final String lastMessage;
 
   ChatTileModel({required this.id, required this.name, required this.pfp, required this.lastMessage});

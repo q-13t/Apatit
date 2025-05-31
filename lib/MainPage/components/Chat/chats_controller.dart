@@ -19,6 +19,7 @@ class ChatsListState extends State<ChatsList> {
   final ValueNotifier<List<ChatTileModel>> chatsNotifier = ValueNotifier([]);
   // late StreamSubscription _subscription;
   final ScrollController _scrollController = ScrollController();
+  // ignore: unused_field
   final Logger _logger = Logger("ChatsList");
   int offset = 0;
   int limit = 20;
@@ -28,18 +29,18 @@ class ChatsListState extends State<ChatsList> {
   void initState() {
     super.initState();
     _scrollController.addListener(_loadMoreChats);
-    chatsNotifier.value = [
-      ChatTileModel(id: 0, name: "Chat_1", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 1, name: "Chat_2", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 2, name: "Chat_3", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 3, name: "Chat_4", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 4, name: "Chat_5", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 5, name: "Chat_6", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 6, name: "Chat_7", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 7, name: "Chat_8", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 8, name: "Chat_9", pfp: 0, lastMessage: "Last message"),
-      ChatTileModel(id: 9, name: "Chat_10", pfp: 0, lastMessage: "Last message"),
-    ];
+    // chatsNotifier.value = [
+    //   ChatTileModel(id: 0, name: "Chat_1", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 1, name: "Chat_2", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 2, name: "Chat_3", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 3, name: "Chat_4", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 4, name: "Chat_5", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 5, name: "Chat_6", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 6, name: "Chat_7", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 7, name: "Chat_8", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 8, name: "Chat_9", pfp: "0", lastMessage: "Last message"),
+    //   ChatTileModel(id: 9, name: "Chat_10", pfp: "0", lastMessage: "Last message"),
+    // ];
 
     // _subscription = NetworkController.messageStreamController.stream.listen((message) {
     //   _logger.debug("Got message: $message");

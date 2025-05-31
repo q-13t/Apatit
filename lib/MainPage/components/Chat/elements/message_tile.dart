@@ -1,8 +1,8 @@
-import 'dart:typed_data';
 
 import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/audio_player.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/video_player.dart';
+import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
 
@@ -54,7 +54,10 @@ class _MessageTileState extends State<MessageTile> {
               padding: EdgeInsets.all(5),
               child: Container(height: 2, width: double.infinity, color: Colors.cyan[500]),
             ),
-            buildMedia(context, widget.model),
+            FutureBuilder(
+              future: buildMedia(context, widget.model),
+              builder: (context, snapshot) => snapshot.data ?? CircularProgressIndicator(),
+            ),
             Text(widget.model.message ?? "", style: TextStyle(fontSize: 20), textAlign: TextAlign.start),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -70,14 +73,16 @@ class _MessageTileState extends State<MessageTile> {
     );
   }
 
-  Widget buildMedia(BuildContext context, MessageModel model) {
+  Future<Widget> buildMedia(BuildContext context, MessageModel model) async {
+    var data = await NetworkController.getFile(model.fileUuid);
+
     switch (model.type) {
       case MessageType.image:
-        return Image(image: MemoryImage(model.data ?? Uint8List(0)));
+        return Image(image: MemoryImage(data));
       case MessageType.video:
-        return CustomVideoPlayer(model: model);
+        return CustomVideoPlayer(data: data);
       case MessageType.audio:
-        return CustomAudioPlayer(model: model);
+        return CustomAudioPlayer(data: data);
       case MessageType.file:
         return Placeholder();
       default:

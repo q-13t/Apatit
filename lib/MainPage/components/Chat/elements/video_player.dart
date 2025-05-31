@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 
 class CustomVideoPlayer extends StatefulWidget {
-  final MessageModel model;
+  final Uint8List? data;
 
-  const CustomVideoPlayer({super.key, required this.model});
+  const CustomVideoPlayer({super.key, required this.data});
 
   @override
   State<CustomVideoPlayer> createState() => _CustomVideoPlayerState();
@@ -25,8 +24,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
   @override
   void initState() {
     super.initState();
-    if (widget.model.data != null) {
-      _initializeVideo(widget.model.data!);
+    if (widget.data != null) {
+      _initializeVideo(widget.data!);
     }
   }
 

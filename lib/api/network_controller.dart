@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:Apatite/models/me.dart';
@@ -15,9 +17,9 @@ class NetworkController {
   static NetworkController _instance = NetworkController._();
   static bool _initialized = false;
   static String? token;
-  static late WebSocketChannel _channel;
-  static String baseUrlHttp = '192.168.1.157:8080';
-  static String baseUrlWebSocket = 'ws://192.168.1.157:8081';
+  static WebSocketChannel? _channel;
+  static String baseUrlHttp = '192.168.137.1:8080';
+  static String baseUrlWebSocket = 'ws://192.168.137.1:8081';
   NetworkController._();
   static final ValueNotifier<String?> jwtNotifier = ValueNotifier(null);
   static final messageStreamController = StreamController<String>.broadcast();
@@ -25,7 +27,7 @@ class NetworkController {
   static late SharedPreferences _prefs;
   static late Logger _logger;
 
-  static late Me? _me = Me(-1, "User", -1);
+  static Me? _me = Me(-1, "User", -1);
 
   static Me? get me => _me;
 
@@ -66,26 +68,39 @@ class NetworkController {
   static Future<void> setToken(String? token) async {
     await _prefs.setString('token', token ?? '');
     jwtNotifier.value = token;
-    if (token != null) {
-      _channel = WebSocketChannel.connect(Uri.parse(baseUrlWebSocket));
-      _channel.stream.listen(
-        (message) {
-          messageStreamController.sink.add(message);
-        },
-        onError: (error) async {
-          ToastService().showToast('Network error: $error');
-          await setToken(null);
-        },
-        onDone: () async {
-          ToastService().showToast('No Connection To The Server');
-          await setToken(null);
-        },
-      );
+    if (jwtIsEmpty()) {
+      try {
+        _channel!.sink.close();
+      } catch (e) {
+        _logger.err(e.toString());
+      }
+      _channel = null;
+      return;
     }
+    initWebSocket();
+  }
+
+  static void initWebSocket() {
+    _channel = WebSocketChannel.connect(Uri.parse(baseUrlWebSocket));
+    _channel!.stream.listen(
+      (message) {
+        messageStreamController.sink.add(message);
+      },
+      onError: (error) async {
+        ToastService().showToast('Network error: $error');
+        await _prefs.setString('token', jwtNotifier.value ?? '');
+        await setToken(null);
+      },
+      onDone: () async {
+        ToastService().showToast('No Connection To The Server');
+        await _prefs.setString('token', jwtNotifier.value ?? '');
+        await setToken(null);
+      },
+    );
   }
 
   void dispose() {
-    _channel.sink.close();
+    _channel!.sink.close();
     messageStreamController.close();
   }
 
@@ -94,22 +109,24 @@ class NetworkController {
       setToken(null);
       throw Exception("WebSocket not initialized");
     }
-    return _channel;
+    return _channel!;
   }
 
   NetworkController get instance => _instance;
 
   static Future<bool> login(String username, String password) async {
     var url = Uri.http(baseUrlHttp, '/user/login');
+    _logger.debug("$url");
     var data = jsonEncode({'username': username, 'password': password});
     var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((
       error,
       stackTrace,
     ) {
+      //   _logger.err(error.toString());
       return http.Response('Error', 500);
     });
     if (response.statusCode != 200) {
-      ToastService().showToast(jsonDecode(response.body)['error']);
+      ToastService().showToast(response.body);
       return false;
     }
     await setToken(jsonDecode(response.body)['token']);
@@ -147,7 +164,7 @@ class NetworkController {
     }
     var data = jsonEncode({'token': jwtNotifier.value, 'type': WSMTWrapper[type].toString(), 'data': message});
     _logger.debug("WS sending: $data");
-    _channel.sink.add(data);
+    _channel!.sink.add(data);
   }
 
   static Future<String> _getMe(String token) async {
@@ -170,5 +187,27 @@ class NetworkController {
   static void logout() {
     _me = Me(-1, "", -1);
     setToken('');
+  }
+
+  static Future<bool> uploadFile(File data, String uuid) async {
+    var url = Uri.http(baseUrlHttp, '/file');
+    var request = http.MultipartRequest('PUT', url);
+    request.files.add(http.MultipartFile.fromBytes('file', data.readAsBytesSync(), filename: uuid));
+    request.headers['Authorization'] = 'Bearer ${jwtNotifier.value}';
+    var response = await request.send();
+    _logger.debug("Upload file response: ${response.statusCode} - reason: ${response.reasonPhrase}");
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  static Future<Uint8List> getFile(String? fileUuid) {
+    if (fileUuid == null) return Future.value(Uint8List(0));
+    var url = Uri.http(baseUrlHttp, '/file/get/$fileUuid');
+    return http
+        .get(url, headers: {'Content-Type': 'application/octet-stream', 'Authorization': 'Bearer ${jwtNotifier.value}'})
+        .then((response) => response.bodyBytes);
   }
 }

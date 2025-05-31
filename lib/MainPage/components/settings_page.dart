@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:Apatite/api/network_controller.dart';
+import 'package:Apatite/main.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -11,9 +13,14 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String newUserName = '';
-  String newPassword = '';
-  File? newPfp;
+  String _newUserName = '';
+  String _newPassword = '';
+  File? _newPfp;
+
+  void updateUserData() {
+    if (_newPfp == null) return;
+    NetworkController.uploadFile(_newPfp!, Main.getUuid());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,23 +37,25 @@ class _SettingsPageState extends State<SettingsPage> {
                 if (pickedFile == null) {
                   return;
                 }
+                _newPfp = File(pickedFile.files.single.path!);
+                setState(() {});
               },
+
               child: CircleAvatar(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: newPfp == null ? Placeholder() : Image.file(newPfp!, fit: BoxFit.cover),
-                ),
+                radius: 50,
+                backgroundImage: _newPfp == null ? null : FileImage(_newPfp!),
+                child: _newPfp == null ? Icon(Icons.person, size: 50) : null,
               ),
             ),
           ),
           SizedBox(height: 15),
           TextField(
             decoration: InputDecoration(hintText: 'Enter Username', border: OutlineInputBorder()),
-            onChanged: (value) => {},
+            onChanged: (value) => {_newUserName = value},
           ),
           TextField(
             decoration: InputDecoration(hintText: 'Enter Password', border: OutlineInputBorder()),
-            onChanged: (value) => {},
+            onChanged: (value) => {_newPassword = value},
           ),
           Spacer(),
           Row(
@@ -68,7 +77,7 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => {},
+                  onPressed: () => {updateUserData()},
                   style: ButtonStyle(
                     shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                     minimumSize: WidgetStateProperty.all(Size(60, 60)),
