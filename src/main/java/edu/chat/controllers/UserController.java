@@ -8,12 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import com.google.gson.JsonObject;
 import edu.chat.services.UserService;
 import edu.chat.views.User;
@@ -29,23 +24,25 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @RequestMapping(name = "getMe", value = "/getMe", method = RequestMethod.GET)
+    @GetMapping(name = "getMe", value = "/getMe")
     public ResponseEntity<String> requestMethodName(HttpServletRequest request) {
         try {
             return userService.getMe(request.getHeader("Authorization").substring(7));
         } catch (Exception e) {
             log.error("Error during authentication: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body(e.getMessage());
+            JsonObject errorJson = new JsonObject();
+            errorJson.addProperty("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body(errorJson.toString());
         }
     }
 
-    @RequestMapping(name = "validateToken", value = "/validateToken", method = RequestMethod.POST)
-    public ResponseEntity<String> requestMethodName() {
+    @PostMapping(name = "validateToken", value = "/validateToken")
+    public ResponseEntity<String> validateToken() {
         // The response is ok, because filtering passed.
         return ResponseEntity.ok("Token is valid");
     }
 
-    @RequestMapping(name = "login", value = "/login", method = RequestMethod.POST)
+    @PostMapping(name = "login", value = "/login")
     public ResponseEntity<String> login(@Valid @RequestBody User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             JsonObject errorJson = new JsonObject();
@@ -65,7 +62,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(name = "register", value = "/register", method = RequestMethod.POST)
+    @PostMapping(name = "register", value = "/register")
     public ResponseEntity<String> register(@Valid @RequestBody User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             JsonObject errorJson = new JsonObject();
@@ -84,7 +81,7 @@ public class UserController {
 
     }
 
-    @RequestMapping(name = "changeUsername", value = "/changeUsername", method = RequestMethod.PATCH)
+    @PatchMapping(name = "changeUsername", value = "/changeUsername")
     public ResponseEntity<String> changeUsername(@RequestBody String body) {
         try {
             return userService.changeUsername(body);
@@ -94,7 +91,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(name = "changePassword", value = "/changePassword", method = RequestMethod.PATCH)
+    @PatchMapping(name = "changePassword", value = "/changePassword")
     public ResponseEntity<String> changePassword(@RequestBody String body) {
         try {
             return userService.changePassword(body);
@@ -104,17 +101,17 @@ public class UserController {
         }
     }
 
-    @RequestMapping(name = "changePfp", value = "/changePfp", method = RequestMethod.PATCH)
+    @PatchMapping(name = "changePfp", value = "/changePfp")
     public ResponseEntity<String> changePfp(@RequestBody String body) {
         try {
-            return userService.changePassword(body);
+            return userService.changePfp(body);
         } catch (Exception e) {
             log.error("Error during profile picture change: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(e.getMessage());
         }
     }
 
-    @RequestMapping(name = "getUser", value = "/getUser{username}", method = RequestMethod.GET)
+    @GetMapping(name = "getUser", value = "/getUser{username}")
     public ResponseEntity<String> getUser(@RequestParam String username) {
         try {
             return userService.getUserByUsername(username);
@@ -124,7 +121,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(name = "getUsers", value = "/getUsers{username}", method = RequestMethod.GET)
+    @GetMapping(name = "getUsers", value = "/getUsers{username}")
     public ResponseEntity<String> getUsers(@RequestParam String username) {
         try {
             return userService.getUsers(username);

@@ -62,14 +62,15 @@ public class UserService {
 
     public ResponseEntity<String> changeUsername(String body) throws UserDoesNotExistException {
         JsonObject map = new Gson().fromJson(body, JsonObject.class);
-        String username = map.get("username").toString();
-        String newUsername = map.get("newUsername").toString();
-        User user = userRoutes.changeUsername(userRoutes.getUserByUsername(username), newUsername);
+        String username = map.get("username").getAsString();
+        String newUsername = map.get("newUsername").getAsString();
+        User userByUsername = userRoutes.getUserByUsername(username);
+        User user = userRoutes.changeUsername(userByUsername, newUsername);
         if (user != null) {
             JsonObject json = new JsonObject();
             json.addProperty("id", user.getId());
             json.addProperty("username", user.getUsername());
-            json.addProperty("pfp", user.getPfp());
+            json.addProperty("pfp", user.getPfpUUID());
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(json.toString());
         }
         throw new UserDoesNotExistException();
@@ -89,7 +90,7 @@ public class UserService {
                     JsonObject json = new JsonObject();
                     json.addProperty("id", userDB.getId());
                     json.addProperty("username", userDB.getUsername());
-                    json.addProperty("pfp", userDB.getPfp());
+                    json.addProperty("pfp", user.getPfpUUID());
                     return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(json.toString());
                 }
             } else {
@@ -101,14 +102,15 @@ public class UserService {
 
     public ResponseEntity<String> changePfp(String body) throws UserDoesNotExistException {
         JsonObject map = new Gson().fromJson(body, JsonObject.class);
-        String username = map.get("username").toString();
-        String pfp = map.get("pfp").toString();
-        User user = userRoutes.changePfp(userRoutes.getUserByUsername(username), pfp);
+        String username = map.get("username").getAsString();
+        String pfp = map.get("pfp").getAsString();
+        User userByUsername = userRoutes.getUserByUsername(username);
+        User user = userRoutes.changePfp(userByUsername, pfp);
         if (user != null) {
             JsonObject json = new JsonObject();
             json.addProperty("id", user.getId());
             json.addProperty("username", user.getUsername());
-            json.addProperty("pfp", user.getPfp());
+            json.addProperty("pfp", user.getPfpUUID());
             return ResponseEntity.ok().body(json.toString());
         }
         throw new UserDoesNotExistException();
@@ -120,7 +122,7 @@ public class UserService {
             JsonObject json = new JsonObject();
             json.addProperty("id", user.getId());
             json.addProperty("username", user.getUsername());
-            json.addProperty("pfp", user.getPfp());
+            json.addProperty("pfp", user.getPfpUUID());
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(json.toString());
         }
         throw new UserDoesNotExistException();
@@ -134,7 +136,7 @@ public class UserService {
                 JsonObject json = new JsonObject();
                 json.addProperty("id", user.getId());
                 json.addProperty("username", user.getUsername());
-                json.addProperty("pfp", user.getPfp());
+                json.addProperty("pfp", user.getPfpUUID());
                 list.add(json);
             }
         }
@@ -150,6 +152,6 @@ public class UserService {
     public ResponseEntity<String> getMe(String token) {
         String username = userRoutes.getUsernameByToken(token);
         User userByUsername = userRoutes.getUserByUsername(username);
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(new Gson().toJson(userByUsername));
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(userByUsername.toJson().toString());
     }
 }

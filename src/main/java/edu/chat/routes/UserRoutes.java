@@ -27,10 +27,9 @@ class UserMapper implements RowMapper<User> {
         user.setId(result.getInt("id"));
         user.setUsername(result.getString("user_name"));
         user.setPassword(result.getString("password"));
-        user.setPfp(result.getInt("profile_picture"));
+        user.setPfpUUID(result.getString("pfp_uuid"));
         return user;
     }
-
 }
 
 @Service
@@ -166,7 +165,7 @@ public class UserRoutes {
         try {
             if (!checkUserExists(user.getUsername()))
                 return null;
-            jdbcTemplate.update("UPDATE \"user\" SET pfp = ? WHERE user_name = ?", newPfp, user.getUsername());
+            jdbcTemplate.update("UPDATE \"user\" SET pfp_uuid = ? WHERE user_name = ?", newPfp, user.getUsername());
             return getUserByUsername(user.getUsername());
         } catch (DataAccessException e) {
             log.error(e.getMessage());

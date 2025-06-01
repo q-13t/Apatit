@@ -22,18 +22,18 @@ public class User {
     @NotBlank(message = "Password is required")
     private String password;
 
-    @JsonProperty("pfp")
-    private int pfp;
+    @JsonProperty("pfpUUID")
+    private String pfpUUID;
 
     public User() {
     }
 
     @JsonCreator
-    public User(@JsonProperty("id") int id, @JsonProperty("username") String username, @JsonProperty("password") String password, @JsonProperty("pfp") int pfp) {
+    public User(@JsonProperty("id") int id, @JsonProperty("username") String username, @JsonProperty("password") String password, @JsonProperty("pfpUUID") String pfpUUID) {
         this.id = id;
         this.username = username;
         this.password = password;
-        this.pfp = pfp;
+        this.pfpUUID = pfpUUID;
     }
 
     public int getId() {
@@ -60,26 +60,26 @@ public class User {
         this.password = password;
     }
 
-    public int getPfp() {
-        return pfp;
-    }
-
-    public void setPfp(int pfp) {
-        this.pfp = pfp;
-    }
-
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
         json.addProperty("id", id);
         json.addProperty("username", username);
         json.addProperty("password", password);
-        json.addProperty("pfp", pfp);
+        json.addProperty("pfpUUID", pfpUUID);
         return json;
     }
 
     @Override
     public String toString() {
-        return "ChatUser [id=" + id + ", username=" + username + ", password=" + password + ", pfp=" + pfp + "]";
+        return "ChatUser [id=" + id + ", username=" + username + ", password=" + password + ", pfp=" + pfpUUID + "]";
+    }
+
+    public String getPfpUUID() {
+        return pfpUUID;
+    }
+
+    public void setPfpUUID(String pfpUUID) {
+        this.pfpUUID = pfpUUID;
     }
 
 }

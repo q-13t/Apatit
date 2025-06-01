@@ -14,7 +14,6 @@ public class FileService {
 
     public ResponseEntity<String> performFileSave(MultipartFile file) {
         JsonObject response = new JsonObject();
-
         try {
             FileOperator.storeFile(file);
         } catch (Exception e) {

@@ -18,11 +18,9 @@ import edu.chat.Exceptions.InvalidTokenException;
 import edu.chat.Exceptions.InvalidUserNameException;
 import edu.chat.Exceptions.UserNotFoundException;
 import edu.chat.routes.ChatRoutes;
-import edu.chat.routes.FileRoutes;
 import edu.chat.routes.UserRoutes;
 import edu.chat.utils.FileOperator;
 import edu.chat.views.Chat;
-import edu.chat.views.FileView;
 import edu.chat.views.User;
 import edu.chat.views.enums.WEBSocketRequestType;
 
@@ -35,13 +33,7 @@ public class WEBSocketService {
     private UserRoutes userRoutes;
 
     @Autowired
-    private FileRoutes fileRoutes;
-
-    @Autowired
     private ChatRoutes chatRoutes;
-
-    @Autowired
-    FileOperator fileOperator;
 
     public JsonObject prepareGetUsersByUsernameResponse(WEBSocketRequestType requestType, JsonObject request) throws UserNotFoundException, InvalidUserNameException, InvalidTokenException {
         JsonObject response = new JsonObject();
@@ -59,7 +51,7 @@ public class WEBSocketService {
                 JsonObject userJson = new JsonObject();
                 userJson.addProperty("id", user.getId());
                 userJson.addProperty("username", user.getUsername());
-                userJson.addProperty("pfp", user.getPfp());
+                userJson.addProperty("pfp", user.getPfpUUID());
                 list.add(userJson);
             }
         }
@@ -76,10 +68,10 @@ public class WEBSocketService {
             throw new InvalidUserNameException();
         }
         User user = userRoutes.getUserByUsername(searchUsername);
-        FileView pfp = fileRoutes.getFileByID(user.getPfp());
+        String pfpUUID = user.getPfpUUID();
         String payload;
-        if (pfp != null && pfp.getId() != 0) {
-            payload = Base64.getEncoder().encodeToString(fileOperator.getFile(pfp.getFile_url()));
+        if (pfpUUID != null && pfpUUID != "") {
+            payload = Base64.getEncoder().encodeToString(FileOperator.getFile(pfpUUID));
         } else {
             payload = "null";
         }
