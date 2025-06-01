@@ -101,7 +101,7 @@ class _NewChatControllerState extends State<NewChatController> {
                                 () => {
                                   NetworkController.websocketSend({
                                     'user1': value[index].id,
-                                    'user2': NetworkController.me?.id,
+                                    'user2': NetworkController.me.id,
                                   }, WSMType.newChatPrivate),
                                 },
                             child: Padding(

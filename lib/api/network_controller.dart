@@ -7,6 +7,7 @@ import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
 import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,9 +27,9 @@ class NetworkController {
   static late SharedPreferences _prefs;
   static late Logger _logger;
 
-  static Me? _me = Me(-1, "User", -1);
+  static Me _me = Me(-1, "", "");
 
-  static Me? get me => _me;
+  static Me get me => _me;
 
   static Uint8List? getCachedPFP(String username) => _pfpCache[username];
 
@@ -115,7 +116,7 @@ class NetworkController {
 
   NetworkController get instance => _instance;
 
-  static Future<bool> login(String username, String password) async {
+  static Future<bool> login(String? username, String? password) async {
     var url = Uri.http(baseUrlHttp, '/user/login');
     _logger.debug("$url");
     var data = jsonEncode({'username': username, 'password': password});
@@ -172,6 +173,11 @@ class NetworkController {
     var url = Uri.http(baseUrlHttp, '/user/getMe');
     var response = await http.get(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'});
     _logger.debug("Get me response: ${response.body}");
+    if (response.statusCode == 401) {
+      ToastService().showToast('Unauthorized');
+      final secureStorage = FlutterSecureStorage();
+      NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
+    }
     return response.body;
   }
 
@@ -185,22 +191,23 @@ class NetworkController {
   }
 
   static void logout() {
-    _me = Me(-1, "", -1);
+    _me = Me(-1, "", "");
     setToken('');
   }
 
-  static Future<bool> uploadFile(File data, String uuid) async {
+  static Future<int> uploadFile(File data, String uuid) async {
     var url = Uri.http(baseUrlHttp, '/file');
     var request = http.MultipartRequest('PUT', url);
     request.files.add(http.MultipartFile.fromBytes('file', data.readAsBytesSync(), filename: uuid));
     request.headers['Authorization'] = 'Bearer ${jwtNotifier.value}';
     var response = await request.send();
     _logger.debug("Upload file response: ${response.statusCode}");
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      return false;
+    if (response.statusCode == 401) {
+      ToastService().showToast('Unauthorized');
+      final secureStorage = FlutterSecureStorage();
+      NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     }
+    return response.statusCode;
   }
 
   static Future<Uint8List> getFile(String? fileUuid) {
@@ -209,5 +216,72 @@ class NetworkController {
     return http
         .get(url, headers: {'Content-Type': 'application/octet-stream', 'Authorization': 'Bearer ${jwtNotifier.value}'})
         .then((response) => response.bodyBytes);
+  }
+
+  static Future<int> updateUsername(String newUserName) async {
+    var url = Uri.http(baseUrlHttp, '/user/changeUsername');
+    var data = jsonEncode({"username": me.username, "newUsername": newUserName});
+    var response = await http
+        .patch(
+          url,
+          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'},
+          body: data,
+        )
+        .onError((error, stackTrace) => http.Response('Error', 500));
+    _logger.debug("updateUsername response: ${response.statusCode} - reason: ${response.body}");
+    if (response.statusCode == 401) {
+      ToastService().showToast('Unauthorized');
+      final secureStorage = FlutterSecureStorage();
+      NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
+    } else if (response.statusCode == 200) {
+      _me.username = newUserName;
+      final secureStorage = FlutterSecureStorage();
+      await secureStorage.write(key: 'username', value: newUserName);
+    }
+    return response.statusCode;
+  }
+
+  static Future<int> updatePassword(String newPassword, String oldPassword) async {
+    var url = Uri.http(baseUrlHttp, '/user/changePassword');
+    var data = jsonEncode({"username": me.username, "old_password": oldPassword, "new_password": newPassword});
+    var response = await http
+        .patch(
+          url,
+          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'},
+          body: data,
+        )
+        .onError((error, stackTrace) => http.Response('Error', 500));
+    _logger.debug("updatePassword response: ${response.statusCode} - reason: ${response.body}");
+    if (response.statusCode == 401) {
+      ToastService().showToast('Unauthorized');
+      final secureStorage = FlutterSecureStorage();
+      NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
+    } else if (response.statusCode == 200) {
+      final secureStorage = FlutterSecureStorage();
+      await secureStorage.write(key: 'password', value: newPassword);
+    }
+    return response.statusCode;
+  }
+
+  static Future<int> updatePFP(String fileName, File? newPfp) async {
+    var url = Uri.http(baseUrlHttp, '/user/changePfp');
+    var data = jsonEncode({"username": me.username, "pfp": fileName});
+    var response = await http
+        .patch(
+          url,
+          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'},
+          body: data,
+        )
+        .onError((error, stackTrace) => http.Response('Error', 500));
+    if (response.statusCode == 401) {
+      ToastService().showToast('Unauthorized');
+      final secureStorage = FlutterSecureStorage();
+      NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
+    } else if (response.statusCode == 200) {
+      _logger.debug("updatePassword response: ${response.statusCode} - reason: ${response.body}");
+      _me.pfpUuid = fileName;
+      if (newPfp != null) _me.setPfp(newPfp.readAsBytesSync());
+    }
+    return response.statusCode;
   }
 }

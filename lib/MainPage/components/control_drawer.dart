@@ -23,10 +23,7 @@ class _ControlDrawerState extends State<ControlDrawer> {
               Expanded(
                 child: DrawerHeader(
                   decoration: const BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)),
-                  child: Text(
-                    NetworkController.me == null ? "Username" : NetworkController.me!.username,
-                    style: const TextStyle(fontSize: 24),
-                  ),
+                  child: Text(NetworkController.me.username, style: const TextStyle(fontSize: 24)),
                 ),
               ),
             ],
