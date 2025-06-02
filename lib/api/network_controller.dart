@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:Apatite/models/me.dart';
+import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
 import 'package:Apatite/utils/toast_service.dart';
@@ -27,9 +27,9 @@ class NetworkController {
   static late SharedPreferences _prefs;
   static late Logger _logger;
 
-  static Me _me = Me(-1, "", "");
+  static User _me = User(-1, "", "");
 
-  static Me get me => _me;
+  static User get me => _me;
 
   static Uint8List? getCachedPFP(String username) => _pfpCache[username];
 
@@ -47,8 +47,12 @@ class NetworkController {
     if (token != null && token != '') {
       bool valid = await NetworkController.askValidation(token);
       if (valid) {
-        _getMe(token).then((meResp) => {_me = Me.fromJson(jsonDecode(meResp))});
         NetworkController.setToken(token);
+        _getMe(token).then((meResp) {
+          _me = User.fromJson(jsonDecode(meResp));
+          websocketSend({"id": _me.id}, WSMType.bind);
+          getFile(_me.pfpUuid).then((value) => _me.setPfp(value));
+        });
       } else {
         NetworkController.setToken('');
       }
@@ -188,7 +192,7 @@ class NetworkController {
   }
 
   static void logout() {
-    _me = Me(-1, "", "");
+    _me = User(-1, "", "");
     setToken('');
   }
 

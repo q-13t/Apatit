@@ -20,15 +20,15 @@ class Logger {
     _clazz = clazz;
   }
 
-  void info(String message) {
+  void debug(String message) {
     if (_level >= 2) {
-      log('${DateTime.now()} - INFO - [$_clazz]: $message');
+      log('${DateTime.now()} - DEBUG - [$_clazz]: $message');
     }
   }
 
-  void debug(String message) {
+  void info(String message) {
     if (_level >= 1) {
-      log('${DateTime.now()} - DEBUG - [$_clazz]: $message');
+      log('${DateTime.now()} - INFO  - [$_clazz]: $message');
     }
   }
 

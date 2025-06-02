@@ -11,29 +11,29 @@ class MainPageController extends StatefulWidget {
   const MainPageController({super.key});
 
   @override
-  State<MainPageController> createState() => _MainPageControllerState();
+  State<MainPageController> createState() => MainPageControllerState();
 }
 
-class _MainPageControllerState extends State<MainPageController> {
-  Pages selectedPage = Pages.chats;
+class MainPageControllerState extends State<MainPageController> {
+  static ValueNotifier<Pages> currentPage = ValueNotifier(Pages.chats);
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  late ChatTileModel chatData;
+  static ChatTileModel chatData = ChatTileModel(id: 0, name: "Chat_1", pfp: "0", lastMessage: "Last message");
 
   setChatData(chat) {
     setState(() {
       chatData = chat;
-      selectedPage = Pages.chat;
+      currentPage.value = Pages.chat;
     });
   }
 
   changePage(Pages page) {
     setState(() {
-      selectedPage = page;
+      currentPage.value = page;
     });
   }
 
   getCurrentPage() {
-    switch (selectedPage) {
+    switch (currentPage.value) {
       case Pages.chat:
         return ChatView(changePage: changePage, model: chatData);
       case Pages.chats:
@@ -76,6 +76,6 @@ class _MainPageControllerState extends State<MainPageController> {
 
   @override
   Widget build(BuildContext context) {
-    return getCurrentPage();
+    return ValueListenableBuilder(builder: (context, value, child) => getCurrentPage(), valueListenable: currentPage);
   }
 }

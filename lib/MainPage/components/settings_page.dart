@@ -68,7 +68,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget buildImage() {
-    _logger.debug("Image Stored: ${NetworkController.me.pfpUuid}");
+    _logger.debug("Image Stored: ${NetworkController.me.pfpUuid} ");
     if (_newPfp != null) {
       return CircleAvatar(child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.file(_newPfp!)));
     } else if (_oldPfp != null) {

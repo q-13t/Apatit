@@ -3,10 +3,13 @@ import 'dart:convert';
 
 import 'package:Apatite/MainPage/components/empty_widget.dart';
 import 'package:Apatite/MainPage/components/new_chat/user_tile.dart';
+import 'package:Apatite/MainPage/main_page_controller.dart';
 import 'package:Apatite/api/network_controller.dart';
+import 'package:Apatite/models/chat_tile_model.dart';
 import 'package:Apatite/models/user_tile_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
+import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 
 class NewChatController extends StatefulWidget {
@@ -40,6 +43,18 @@ class _NewChatControllerState extends State<NewChatController> {
         var list = List.generate(data['users'].length, (index) => UserTileModel.fromMap(data['users'][index]));
         lastLoad = list.length;
         usersNotifier.value += list;
+      }
+    });
+    NetworkController.messageStreamController.stream.listen((message) {
+      var data = jsonDecode(message.toString());
+      if (data['type'] == WSMTWrapper[WSMType.newChatPrivate]) {
+        _logger.debug("Got new chat: ${data['chat_id']}");
+        if (data['chat_id'] == null || data['id'] == -1) {
+          ToastService().showToast('Chat not created');
+        } else {
+          MainPageControllerState.chatData = ChatTileModel(id: data['chat_id'], name: data['name']);
+          MainPageControllerState.currentPage.value = Pages.chat;
+        }
       }
     });
   }

@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:Apatite/MainPage/components/Chat/elements/message_tile.dart';
 import 'package:Apatite/MainPage/components/empty_widget.dart';
+import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/main.dart';
 import 'package:Apatite/models/chat_tile_model.dart';
+import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
 import 'package:flutter/material.dart';
@@ -21,32 +24,26 @@ class ChatView extends StatefulWidget {
   State<ChatView> createState() => _ChatViewState();
 }
 
-class _ChatViewState extends State<ChatView> with ChangeNotifier {
+class _ChatViewState extends State<ChatView> {
   final _scrollController = ScrollController();
   final ValueNotifier<List<MessageModel>> messages = ValueNotifier([]);
+  final List<User> participants = [];
   String myInput = '';
   final Logger _logger = Logger("ChatView");
   final _textController = TextEditingController();
 
   File? _file;
-  MessageModel _mineCurrent = MessageModel(isMine: true);
+  late MessageModel _mineCurrent;
 
   @override
   void initState() {
     super.initState();
-    // messages.value = List.generate(
-    //   20,
-    //   (index) => MessageModel(
-    //     id: index,
-    //     sender: index.isEven ? widget.model.id : 0,
-    //     data: null,
-    //     status: MessageStatus.values.elementAt(Random().nextInt(MessageStatus.values.length)),
-    //     message: List.generate(Random().nextInt(150) + 1, (index) => 'x').join(),
-    //     timeStamp: DateTime.now().toString(),
-    //     type: MessageType.values.elementAt(Random().nextInt(MessageType.values.length)),
-    //     isMine: index.isEven,
-    //   ),
-    // );
+    // TODO: Get all participants and store them in map.
+
+    // TODO: load 10 latest messages
+
+    // The message is always bound to the user
+    _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -57,14 +54,12 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   void sendMessage() {
     _logger.debug("Messages: $myInput");
 
-    if ((_mineCurrent.message == null || _mineCurrent.message!.isEmpty) && _mineCurrent.fileUuid == null) return;
+    if ((_mineCurrent.text == null || _mineCurrent.text!.isEmpty) && _mineCurrent.fileUuid == null) return;
     _mineCurrent.timeStamp = DateTime.now().toString();
 
     // Send message
-
     messages.value.add(_mineCurrent);
-    _mineCurrent = MessageModel(isMine: true);
-    messages.notifyListeners();
+    _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
     _textController.clear();
     clearFileSelection();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -73,7 +68,7 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   }
 
   void addMyText(String text) {
-    _mineCurrent.message = text;
+    _mineCurrent.text = text;
   }
 
   void pickFile() async {
@@ -84,10 +79,12 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
       }
       _file = File(result.files.single.path!);
       if (_file == null) return;
-      var extension = resolveMessageType(p.extension(_file!.path));
+      var extension = p.extension(_file!.path);
+      var type = resolveMessageType(extension);
       var fileUuid = Main.getUuid();
-      _mineCurrent.fileUuid = fileUuid;
-      _mineCurrent.type = extension;
+      _mineCurrent.fileUuid = fileUuid + extension;
+      _mineCurrent.type = type;
+      _mineCurrent.data = await _file!.readAsBytes();
       setState(() {});
     } catch (e) {
       _logger.err(e.toString());
@@ -127,6 +124,14 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
   }
 
   @override
+  void dispose() {
+    _textController.dispose();
+    _scrollController.dispose();
+    messages.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -150,7 +155,7 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
                     controller: _scrollController,
                     itemCount: value.length,
                     itemBuilder: (context, index) {
-                      return MessageTile(model: value[index]);
+                      return MessageTile(message: value[index], user: NetworkController.me);
                     },
                   );
                 },
@@ -203,27 +208,29 @@ class _ChatViewState extends State<ChatView> with ChangeNotifier {
 
 class MessageModel {
   int? id;
-  int? sender;
-  String? fileUuid;
-  String? message;
-  MessageStatus? status;
+  String? text;
   String? timeStamp;
+  int sender;
+  int chatId;
+  MessageStatus? status;
+  String? fileUuid;
+  Uint8List? data;
+
   MessageType? type;
-  bool? isMine;
 
   MessageModel({
     this.id,
-    this.sender,
+    required this.sender,
     this.fileUuid,
-    this.message,
+    this.text,
     this.status,
+    required this.chatId,
     this.timeStamp,
     this.type,
-    this.isMine,
   });
 
   @override
   String toString() {
-    return 'MessageModel{id: $id, sender: $sender,  message: $message, status: $status, timeStamp: $timeStamp, type: $type, isMine: $isMine}';
+    return 'MessageModel{id: $id, sender: $sender,  message: $text, status: $status, timeStamp: $timeStamp, type: $type,  fileUuid: $fileUuid}';
   }
 }

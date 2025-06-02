@@ -22,7 +22,12 @@ class _ControlDrawerState extends State<ControlDrawer> {
             children: [
               Expanded(
                 child: DrawerHeader(
-                  decoration: const BoxDecoration(color: Color.fromARGB(255, 12, 142, 165)),
+                  decoration: BoxDecoration(
+                    image:
+                        NetworkController.me.pfp != null
+                            ? DecorationImage(image: MemoryImage(NetworkController.me.pfp!))
+                            : null,
+                  ),
                   child: Text(NetworkController.me.username, style: const TextStyle(fontSize: 24)),
                 ),
               ),

@@ -43,6 +43,8 @@ enum WSMType {
   getUsersByName,
   getPFP,
   newChatPrivate,
+  bind,
+  deleteChat,
 }
 
 // ignore: non_constant_identifier_names
@@ -58,4 +60,6 @@ final WSMTWrapper = {
   WSMType.getUsersByName: "getUsersByName",
   WSMType.getPFP: "getPFP",
   WSMType.newChatPrivate: "newChatPrivate",
+  WSMType.bind: "bind",
+  WSMType.deleteChat: "deleteChat",
 };
