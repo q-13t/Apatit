@@ -35,23 +35,25 @@ public class WEBSocketService {
     @Autowired
     private ChatRoutes chatRoutes;
 
-    public JsonObject prepareGetUsersByUsernameResponse(WEBSocketRequestType requestType, JsonObject request) throws UserNotFoundException, InvalidUserNameException, InvalidTokenException {
+    public JsonObject prepareGetUsersByUsernameResponse(WEBSocketRequestType requestType, JsonObject request, String token) throws UserNotFoundException, InvalidUserNameException, InvalidTokenException {
         JsonObject response = new JsonObject();
         response.addProperty("type", requestType.toString());
         String searchUsername = request.get("username").getAsString();
         int offset = request.get("offset").getAsInt();
         int limit = request.get("limit").getAsInt();
+        String callerUsername = userRoutes.getUsernameByToken(token);
         if (searchUsername == null) {
             throw new InvalidUserNameException();
         }
         List<User> usersByUsername = userRoutes.getUsersByUsernamePaginated(searchUsername, offset, limit);
+        usersByUsername.removeIf(user -> user.getUsername().equals(callerUsername));
         JsonArray list = new JsonArray();
         if (usersByUsername != null && !usersByUsername.isEmpty()) {
             for (User user : usersByUsername) {
                 JsonObject userJson = new JsonObject();
                 userJson.addProperty("id", user.getId());
                 userJson.addProperty("username", user.getUsername());
-                userJson.addProperty("pfp", user.getPfpUUID());
+                userJson.addProperty("pfp_uuid", user.getPfpUUID());
                 list.add(userJson);
             }
         }

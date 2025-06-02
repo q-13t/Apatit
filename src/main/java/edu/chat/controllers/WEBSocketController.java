@@ -54,7 +54,7 @@ public class WEBSocketController extends WebSocketServer {
         WEBSC = new WEBSocketController(new InetSocketAddress(serverProperties.getAddress(), 8081));
         WEBSC.setConnectionLostTimeout(60_000);
         WEBSC.start();
-        Thread connectionStatusThread = new Thread("WeBSocketConnectionStatusThread") {
+        Thread connectionStatusThread = new Thread("WEBSocketConnectionStatusThread") {
             @Override
             public void run() {
                 StringBuilder SB = new StringBuilder();
@@ -128,10 +128,11 @@ public class WEBSocketController extends WebSocketServer {
         JsonObject response = new JsonObject();
         WEBSocketRequestType requestType = WEBSocketRequestType.valueOf(request.get("type").getAsString());
         JsonObject data = request.getAsJsonObject("data");
+        String token = request.get("token").getAsString();
         try {
             switch (requestType) {
             case getUsersByName: {
-                response = webSocketService.prepareGetUsersByUsernameResponse(requestType, data);
+                response = webSocketService.prepareGetUsersByUsernameResponse(requestType, data, token);
                 break;
             }
             case getPFP: {
@@ -143,7 +144,7 @@ public class WEBSocketController extends WebSocketServer {
                 break;
             }
             case getChats: {
-                response = webSocketService.prepareGetChatsResponse(requestType, data, request.get("token").getAsString());
+                response = webSocketService.prepareGetChatsResponse(requestType, data, token);
                 break;
             }
             case sendMessage: {
