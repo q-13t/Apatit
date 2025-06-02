@@ -132,10 +132,7 @@ class NetworkController {
       return false;
     }
     await setToken(jsonDecode(response.body)['token']);
-    if (jwtNotifier.value == '') {
-      return false;
-    }
-    return true;
+    return jwtNotifier.value != null && jwtNotifier.value != '';
   }
 
   static Future<bool> register(String username, String password) async {

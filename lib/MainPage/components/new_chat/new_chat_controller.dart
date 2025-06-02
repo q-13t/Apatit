@@ -6,6 +6,7 @@ import 'package:Apatite/MainPage/components/new_chat/user_tile.dart';
 import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/models/user_tile_model.dart';
 import 'package:Apatite/utils/enums.dart';
+import 'package:Apatite/utils/logger.dart';
 import 'package:flutter/material.dart';
 
 class NewChatController extends StatefulWidget {
@@ -25,6 +26,8 @@ class _NewChatControllerState extends State<NewChatController> {
   int limit = 20;
   int lastLoad = 0;
   late String username;
+  // ignore: unused_field
+  final Logger _logger = Logger("_NewChatControllerState");
 
   @override
   void initState() {
@@ -33,6 +36,7 @@ class _NewChatControllerState extends State<NewChatController> {
     _subscription = NetworkController.messageStreamController.stream.listen((message) {
       var data = jsonDecode(message.toString());
       if (data['type'] == WSMTWrapper[WSMType.getUsersByName]) {
+        // _logger.debug("Got users: ${data['users']}");
         var list = List.generate(data['users'].length, (index) => UserTileModel.fromMap(data['users'][index]));
         lastLoad = list.length;
         usersNotifier.value += list;
