@@ -131,6 +131,12 @@ public class WEBSocketController extends WebSocketServer {
         String token = request.get("token").getAsString();
         try {
             switch (requestType) {
+            case bind: {
+                log.info("Binding user: " + data.get("id").getAsInt());
+                // TODO: Assign connection To user ud
+                // clients.get(parseUserShort(conn))
+                break;
+            }
             case getUsersByName: {
                 response = webSocketService.prepareGetUsersByUsernameResponse(requestType, data, token);
                 break;
@@ -149,6 +155,10 @@ public class WEBSocketController extends WebSocketServer {
             }
             case sendMessage: {
                 response = webSocketService.prepareSendMessageResponse(requestType, data);
+                break;
+            }
+            case deleteChat: {
+                response = webSocketService.prepareDeleteChatResponse(requestType, data);
                 break;
             }
 

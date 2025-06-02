@@ -12,20 +12,24 @@ public class Chat {
     private int id;
 
     @JsonProperty("type")
-    private ChatType type;
+    private String type;
 
     @JsonProperty("name")
     private String name;
 
     @JsonProperty("pfp")
-    private int pfp;
+    private String pfp;
+
+    @JsonProperty("lastMessage")
+    private String lastMessage;
 
     @JsonCreator
-    public Chat(@JsonProperty("id") int id, @JsonProperty("type") ChatType type, @JsonProperty("name") String name, @JsonProperty("pfp") int pfp) {
+    public Chat(@JsonProperty("id") int id, @JsonProperty("type") String type, @JsonProperty("name") String name, @JsonProperty("pfp") String pfp, @JsonProperty("lastMessage") String lastMessage) {
         this.id = id;
         this.type = type;
         this.name = name;
         this.pfp = pfp;
+        this.lastMessage = lastMessage;
     }
 
     public Chat() {
@@ -40,11 +44,11 @@ public class Chat {
         this.id = id;
     }
 
-    public ChatType getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(ChatType type) {
+    public void setType(String type) {
         this.type = type;
     }
 
@@ -54,12 +58,13 @@ public class Chat {
         json.addProperty("type", type.toString());
         json.addProperty("name", name);
         json.addProperty("pfp", pfp);
+        json.addProperty("lastMessage", lastMessage);
         return json;
     }
 
     @Override
     public String toString() {
-        return "Chat [id=" + id + ", type=" + type + ", name=" + name + ", pfp=" + pfp + "]";
+        return "Chat [id=" + id + ", type=" + type + ", name=" + name + ", pfp=" + pfp + ", lastMessage=" + lastMessage + "]";
     }
 
     public String getName() {
@@ -70,12 +75,20 @@ public class Chat {
         this.name = name;
     }
 
-    public int getPfp() {
+    public String getPfp() {
         return pfp;
     }
 
-    public void setPfp(int pfp) {
+    public void setPfp(String pfp) {
         this.pfp = pfp;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
     }
 
 }

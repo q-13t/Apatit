@@ -4,6 +4,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import org.antlr.v4.runtime.misc.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +25,9 @@ class ChatMapper implements RowMapper<Chat> {
     public Chat mapRow(ResultSet rs, int rowNum) throws SQLException {
         Chat chat = new Chat();
         chat.setId(rs.getInt("id"));
-        chat.setType(ChatType.valueOf(rs.getString("type")));
+        chat.setType(rs.getString("type"));
+        chat.setName(rs.getString("name"));
+        chat.setPfp(rs.getString("pfp"));
         return chat;
     }
 }
@@ -45,23 +50,52 @@ public class ChatRoutes {
 
     public List<Chat> getChats(int user_id, int offset, int limit) {
         try {
-            return jdbcTemplate.query("SELECT * FROM chat WHERE id IN (SELECT chat_id FROM participants WHERE user_id = ?) LIMIT ? OFFSET ?", new ChatMapper(), user_id, limit, offset);
+            List<Chat> chats = jdbcTemplate.query("SELECT * FROM chat WHERE id IN (SELECT chat_id FROM participants WHERE user_id = ?) LIMIT ? OFFSET ?", new ChatMapper(), user_id, limit, offset);
+            for (Chat chat : chats) {
+                try {
+                    String type = jdbcTemplate.queryForObject("SELECT type FROM messages WHERE chat_id = ? ORDER BY time_stamp DESC LIMIT 1", String.class, chat.getId());
+                    if (type == null) {
+                        type = "Text";
+                    }
+                    chat.setType(type);
+                    if (type.equals("Text")) {
+                        chat.setLastMessage(jdbcTemplate.queryForObject("SELECT message FROM messages WHERE chat_id = ? ORDER BY time_stamp DESC LIMIT 1", String.class, chat.getId()));
+                    } else {
+                        chat.setLastMessage(type);
+                    }
+                } catch (DataAccessException e) {
+                    chat.setLastMessage("");
+                }
+            }
+            return chats;
         } catch (DataAccessException e) {
             log.error(e.getMessage());
             return null;
         }
     }
 
-    public boolean createChatPrivate(User user1, User user2) {
+    public Pair<Integer, String> createChatPrivate(User user1, User user2) {
         try {
             String name = user1.getUsername() + " - " + user2.getUsername();
-            jdbcTemplate.update("INSERT INTO chat (type, name) VALUES (?,?)", ChatType.PRIVATE.toString(), name);
-            Integer id = jdbcTemplate.queryForObject("SELECT id FROM chat WHERE name = ?", Integer.class, name);
-            jdbcTemplate.update("INSERT INTO participants (chat_id, user_id) VALUES (?, ?), (?, ?)", id, user1.getId(), id, user2.getId());
-            return true;
+            Integer id = null;
+            try {
+                id = jdbcTemplate.queryForObject("SELECT id FROM chat WHERE name = ?", Integer.class, name);
+            } catch (Exception e) {
+            }
+
+            if (id == null) {
+                id = jdbcTemplate.queryForObject("INSERT INTO chat (type, name) VALUES (?,?) RETURNING id", Integer.class, ChatType.PRIVATE.toString(), name);
+                if (jdbcTemplate.update("INSERT INTO participants (chat_id, user_id) VALUES (?, ?), (?, ?)", id, user1.getId(), id, user2.getId()) == 2) {
+                    return new Pair<Integer, String>(id, name);
+                } else {
+                    jdbcTemplate.update("DELETE FROM chat WHERE id = ?", id);
+                    return null;
+                }
+            }
+            return new Pair<Integer, String>(id, name);
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return false;
+            return null;
         }
     }
 
@@ -108,6 +142,18 @@ public class ChatRoutes {
         } catch (DataAccessException e) {
             log.error(e.getMessage());
             return false;
+        }
+    }
+
+    public void deleteChat(int chat_id) {
+        try {
+
+            if (jdbcTemplate.update("DELETE FROM participants WHERE chat_id = ?", chat_id) > 0) {
+                jdbcTemplate.update("DELETE FROM chat WHERE id = ?", chat_id);
+            }
+
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
         }
     }
 }

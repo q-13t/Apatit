@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 
+import org.antlr.v4.runtime.misc.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -85,11 +86,14 @@ public class WEBSocketService {
     public JsonObject prepareNewChatPrivateResponse(WEBSocketRequestType requestType, JsonObject asJsonObject) {
         JsonObject response = new JsonObject();
         response.addProperty("type", requestType.toString());
-        if (chatRoutes.createChatPrivate(userRoutes.getUserByID(asJsonObject.get("user1").getAsInt()), userRoutes.getUserByID(asJsonObject.get("user2").getAsInt()))) {
-            response.addProperty("success", true);
-        } else {
-            response.addProperty("success", false);
+        Pair<Integer, String> id = chatRoutes.createChatPrivate(userRoutes.getUserByID(asJsonObject.get("user1").getAsInt()), userRoutes.getUserByID(asJsonObject.get("user2").getAsInt()));
+        if (id == null) {
+            response.addProperty("chat_id", -1);
+            response.addProperty("name", "");
+            return response;
         }
+        response.addProperty("chat_id", id.a);
+        response.addProperty("name", id.b);
         return response;
     }
 
@@ -118,6 +122,16 @@ public class WEBSocketService {
             }
         }
         response.add("chats", list);
+        return response;
+    }
+
+    public JsonObject prepareDeleteChatResponse(WEBSocketRequestType requestType, JsonObject data) {
+        JsonObject response = new JsonObject();
+
+        int chat_id = data.get("chat_id").getAsInt();
+        chatRoutes.deleteChat(chat_id);
+
+        response.addProperty("type", requestType.toString());
         return response;
     }
 }
