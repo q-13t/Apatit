@@ -1,7 +1,7 @@
-import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/audio_player.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/video_player.dart';
 import 'package:Apatite/api/network_controller.dart';
+import 'package:Apatite/models/message_model.dart';
 import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:flutter/material.dart';
@@ -33,12 +33,6 @@ class _MessageTileState extends State<MessageTile> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ValueListenableBuilder(
-            //   valueListenable: widget.user,
-            //   builder: (context, value, child) {
-            //     if (value == null) {
-            //       return CircleAvatar(child: Icon(Icons.person));
-            //     } else {
             Row(
               children: [
                 CircleAvatar(child: widget.user.pfp != null ? Image.memory(widget.user.pfp!) : Icon(Icons.person)),
@@ -46,10 +40,6 @@ class _MessageTileState extends State<MessageTile> {
                 Text(widget.user.username, style: TextStyle(fontSize: 20)),
               ],
             ),
-
-            //     }
-            //   },
-            // ),
             Padding(
               padding: EdgeInsets.all(5),
               child: Container(height: 2, width: double.infinity, color: Colors.cyan[500]),

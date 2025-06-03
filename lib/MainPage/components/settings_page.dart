@@ -52,7 +52,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     if (_newPfp != null) {
-      NetworkController.uploadFile(_newPfp!, newUUID + p.extension(_newPfp!.path)).then((code) {
+      NetworkController.uploadFile(_newPfp!.readAsBytesSync(), newUUID + p.extension(_newPfp!.path)).then((code) {
         if (code == 200) {
           NetworkController.updatePFP(newUUID + p.extension(_newPfp!.path), _newPfp).then((status) {
             if (status == 200) {

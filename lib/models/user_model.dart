@@ -12,5 +12,10 @@ class User {
     return User(json['id'], json['username'], json['pfpUUID']);
   }
 
+  @override
+  String toString() {
+    return 'User{id: $id, username: $username, pfpUuid: $pfpUuid}';
+  }
+
   void setPfp(Uint8List pfp) => this.pfp = pfp;
 }

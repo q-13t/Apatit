@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:Apatite/models/message_model.dart';
 import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
@@ -47,11 +48,11 @@ class NetworkController {
     if (token != null && token != '') {
       bool valid = await NetworkController.askValidation(token);
       if (valid) {
-        NetworkController.setToken(token);
+        await NetworkController.setToken(token);
         _getMe(token).then((meResp) {
           _me = User.fromJson(jsonDecode(meResp));
           websocketSend({"id": _me.id}, WSMType.bind);
-          getFile(_me.pfpUuid).then((value) => _me.setPfp(value));
+          getFile(_me.pfpUuid).then((value) => _me.pfp = value);
         });
       } else {
         NetworkController.setToken('');
@@ -196,10 +197,10 @@ class NetworkController {
     setToken('');
   }
 
-  static Future<int> uploadFile(File data, String uuid) async {
+  static Future<int> uploadFile(Uint8List data, String uuid) async {
     var url = Uri.http(baseUrlHttp, '/file');
     var request = http.MultipartRequest('PUT', url);
-    request.files.add(http.MultipartFile.fromBytes('file', data.readAsBytesSync(), filename: uuid));
+    request.files.add(http.MultipartFile.fromBytes('file', data, filename: uuid));
     request.headers['Authorization'] = 'Bearer ${jwtNotifier.value}';
     var response = await request.send();
     _logger.debug("Upload file response: ${response.statusCode}");
@@ -283,6 +284,26 @@ class NetworkController {
       _me.pfpUuid = fileName;
       if (newPfp != null) _me.setPfp(newPfp.readAsBytesSync());
     }
+    return response.statusCode;
+  }
+
+  static Future<String> getParticipants(int id) async {
+    var url = Uri.http(baseUrlHttp, '/chat/participants', {'id': id.toString()});
+    return await http
+        .get(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'})
+        .then((response) => response.body);
+  }
+
+  static Future<int> sendMessage(MessageModel mineCurrent) async {
+    var url = Uri.http(baseUrlHttp, '/chat/message');
+    var body = mineCurrent.toJSON();
+    _logger.debug("sendMessage body: $body");
+    var response = await http.put(
+      url,
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'},
+      body: body,
+    );
+    _logger.debug("sendMessage response: ${response.statusCode} - reason: ${response.body}");
     return response.statusCode;
   }
 }

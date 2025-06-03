@@ -1,11 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:Apatite/MainPage/components/Chat/elements/message_tile.dart';
 import 'package:Apatite/MainPage/components/empty_widget.dart';
 import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/main.dart';
 import 'package:Apatite/models/chat_tile_model.dart';
+import 'package:Apatite/models/message_model.dart';
 import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
@@ -38,7 +39,22 @@ class _ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-    // TODO: Get all participants and store them in map.
+    NetworkController.getParticipants(widget.model.id).then((res) {
+      var json = jsonDecode(res);
+      for (var u in json) {
+        if (u['id'] == NetworkController.me.id) {
+          participants.add(NetworkController.me);
+        } else if (u['pfpUUID'] != null) {
+          NetworkController.getFile(u['pfpUUID']).then((val) {
+            u['pfp'] = val;
+            participants.add(User.fromJson(u));
+          });
+        } else {
+          participants.add(User.fromJson(u));
+        }
+        _logger.debug("Response to participants: ${participants}");
+      }
+    });
 
     // TODO: load 10 latest messages
 
@@ -51,13 +67,51 @@ class _ChatViewState extends State<ChatView> {
     });
   }
 
-  void sendMessage() {
+  String formatTimestamp() {
+    var time = DateTime.now();
+    return "${time.year}-${(time.month < 10) ? '0${time.month}' : time.month}-${(time.day < 10) ? '0${time.day}' : time.day} ${(time.hour < 10) ? '0${time.hour}' : time.hour}:${(time.minute < 10) ? '0${time.minute}' : time.minute}:${(time.second < 10) ? '0${time.second}' : time.second}";
+  }
+
+  Future<bool> dispatchMessage() async {
+    if (_mineCurrent.data != null) {
+      return NetworkController.uploadFile(_mineCurrent.data!, _mineCurrent.fileUuid!).then((res) {
+        if (res != 200) return false;
+        _logger.debug("Message: ${_mineCurrent}");
+        return NetworkController.sendMessage(_mineCurrent).then((res) {
+          if (res != 200) return false;
+          _logger.debug("Message sent");
+          return true;
+          // Here comes the notification to the websocket
+        });
+      });
+    } else {
+      return NetworkController.sendMessage(_mineCurrent).then((res) {
+        if (res == 200) {
+          _logger.debug("Message sent");
+          // Here comes the notification to the websocket
+          return true;
+        } else {
+          return false;
+        }
+      });
+    }
+  }
+
+  void sendMessage() async {
     _logger.debug("Messages: $myInput");
 
     if ((_mineCurrent.text == null || _mineCurrent.text!.isEmpty) && _mineCurrent.fileUuid == null) return;
-    _mineCurrent.timeStamp = DateTime.now().toString();
+    _mineCurrent.timeStamp = formatTimestamp();
+
+    if (_mineCurrent.fileUuid == null) {
+      _mineCurrent.type = MessageType.text;
+    }
+
+    _mineCurrent.status = MessageStatus.sent;
 
     // Send message
+    await dispatchMessage();
+
     messages.value.add(_mineCurrent);
     _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
     _textController.clear();
@@ -119,7 +173,7 @@ class _ChatViewState extends State<ChatView> {
 
   void clearFileSelection() {
     _mineCurrent.fileUuid = null;
-    _mineCurrent.type = null;
+    _mineCurrent.type = MessageType.text;
     setState(() {});
   }
 
@@ -203,34 +257,5 @@ class _ChatViewState extends State<ChatView> {
         ],
       ),
     );
-  }
-}
-
-class MessageModel {
-  int? id;
-  String? text;
-  String? timeStamp;
-  int sender;
-  int chatId;
-  MessageStatus? status;
-  String? fileUuid;
-  Uint8List? data;
-
-  MessageType? type;
-
-  MessageModel({
-    this.id,
-    required this.sender,
-    this.fileUuid,
-    this.text,
-    this.status,
-    required this.chatId,
-    this.timeStamp,
-    this.type,
-  });
-
-  @override
-  String toString() {
-    return 'MessageModel{id: $id, sender: $sender,  message: $text, status: $status, timeStamp: $timeStamp, type: $type,  fileUuid: $fileUuid}';
   }
 }
