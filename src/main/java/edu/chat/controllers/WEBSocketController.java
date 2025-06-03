@@ -26,7 +26,7 @@ import edu.chat.views.enums.WEBSocketRequestType;
 @Component
 public class WEBSocketController extends WebSocketServer {
     private static WEBSocketController WEBSC;
-    private static HashMap<String, WebSocket> clients = new HashMap<>();
+    private static HashMap<Integer, WebSocket> clients = new HashMap<>();
     private static Logger log = LogManager.getLogger(WEBSocketController.class.getName());
 
     @Autowired
@@ -100,7 +100,8 @@ public class WEBSocketController extends WebSocketServer {
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         log.info("New connection: " + parseUserShort(conn));
-        clients.put(conn.getRemoteSocketAddress().getAddress().getHostAddress() + ":" + conn.getRemoteSocketAddress().getPort(), conn);
+        // clients.put(conn.getRemoteSocketAddress().getAddress().getHostAddress() + ":"
+        // + conn.getRemoteSocketAddress().getPort(), conn);
         log.info("Total connections: " + clients.size());
         log.info("Handshake: " + handshake.getResourceDescriptor() + " " + handshake.getFieldValue("Sec-WebSocket-Key") + " " + handshake.getFieldValue("Sec-WebSocket-Protocol"));
     }
@@ -108,8 +109,8 @@ public class WEBSocketController extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         log.info("Closed connection: " + parseUserShort(conn));
-        clients.remove(parseUserShort(conn));
-        log.info("Total connections: " + clients.size());
+        clients.values().remove(conn);
+        log.info("Total connections: [" + clients.size() + "]");
     }
 
     @Override
@@ -133,8 +134,7 @@ public class WEBSocketController extends WebSocketServer {
             switch (requestType) {
             case bind: {
                 log.info("Binding user: " + data.get("id").getAsInt());
-                // TODO: Assign connection To user ud
-                // clients.get(parseUserShort(conn))
+                clients.put(data.get("id").getAsInt(), conn);
                 break;
             }
             case getUsersByName: {
