@@ -51,13 +51,13 @@ public class ChatRoutes {
             List<Chat> chats = jdbcTemplate.query("SELECT * FROM chat WHERE id IN (SELECT chat_id FROM participants WHERE user_id = ?) LIMIT ? OFFSET ?", new ChatMapper(), user_id, limit, offset);
             for (Chat chat : chats) {
                 try {
-                    String type = jdbcTemplate.queryForObject("SELECT type FROM messages WHERE chat_id = ? ORDER BY time_stamp DESC LIMIT 1", String.class, chat.getId());
+                    String type = jdbcTemplate.queryForObject("SELECT type FROM message WHERE chat_id = ? ORDER BY time_stamp DESC LIMIT 1", String.class, chat.getId());
                     if (type == null) {
                         type = "Text";
                     }
                     chat.setType(type);
                     if (type.equals("Text")) {
-                        chat.setLastMessage(jdbcTemplate.queryForObject("SELECT message FROM messages WHERE chat_id = ? ORDER BY time_stamp DESC LIMIT 1", String.class, chat.getId()));
+                        chat.setLastMessage(jdbcTemplate.queryForObject("SELECT text FROM message WHERE chat_id = ? ORDER BY time_stamp DESC LIMIT 1", String.class, chat.getId()));
                     } else {
                         chat.setLastMessage(type);
                     }
