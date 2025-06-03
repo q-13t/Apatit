@@ -4,8 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
 import org.antlr.v4.runtime.misc.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -154,6 +152,15 @@ public class ChatRoutes {
 
         } catch (DataAccessException e) {
             log.error(e.getMessage());
+        }
+    }
+
+    public boolean addMessage(String text, String timeStamp, int user_id, int chat_id, String status, String file_uuid, String type) {
+        try {
+            return jdbcTemplate.update("INSERT INTO message(text, time_stamp, user_id, chat_id, status, file_uuid, type)VALUES ( ?, ?, ?, ?, ?, ?, ?);", text, java.sql.Timestamp.valueOf(timeStamp), user_id, chat_id, status, file_uuid, type) == 1;
+        } catch (DataAccessException e) {
+            log.error(e.getMessage());
+            return false;
         }
     }
 }
