@@ -12,12 +12,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import edu.chat.services.ChatService;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 @RequestMapping("/chat")
 public class ChatController {
+    @SuppressWarnings("unused")
     private Logger log = LogManager.getLogger(ChatController.class.getName());
 
     @Autowired
@@ -27,16 +26,6 @@ public class ChatController {
     public ResponseEntity<String> getParticipants(@RequestParam int id) {
         try {
             return chatService.getParticipants(id);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(e.getMessage());
-        }
-    }
-
-    @PutMapping("/message")
-    public ResponseEntity<String> putMessage(@RequestBody String message) {
-        try {
-            log.info(message);
-            return chatService.addMessage(message);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(e.getMessage());
         }

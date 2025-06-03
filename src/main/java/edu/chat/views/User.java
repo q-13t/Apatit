@@ -65,7 +65,7 @@ public class User {
         json.addProperty("id", id);
         json.addProperty("username", username);
         json.addProperty("password", password);
-        json.addProperty("pfpUUID", pfpUUID);
+        json.addProperty("pfp_uuid", pfpUUID);
         return json;
     }
 

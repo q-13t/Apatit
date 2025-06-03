@@ -19,9 +19,11 @@ import edu.chat.Exceptions.InvalidTokenException;
 import edu.chat.Exceptions.InvalidUserNameException;
 import edu.chat.Exceptions.UserNotFoundException;
 import edu.chat.routes.ChatRoutes;
+import edu.chat.routes.MessageRoutes;
 import edu.chat.routes.UserRoutes;
 import edu.chat.utils.FileOperator;
 import edu.chat.views.Chat;
+import edu.chat.views.Message;
 import edu.chat.views.User;
 import edu.chat.views.enums.WEBSocketRequestType;
 
@@ -31,10 +33,20 @@ public class WEBSocketService {
     private Logger log = LogManager.getLogger(WEBSocketService.class.getName());
 
     @Autowired
+    private MessageService messageService;
+
+    @Autowired
     private UserRoutes userRoutes;
 
     @Autowired
     private ChatRoutes chatRoutes;
+
+    @Autowired
+    private MessageRoutes messageRoutes;
+
+    // WEBSocketService(MessageService messageService) {
+    // this.messageService = messageService;
+    // }
 
     public JsonObject prepareGetUsersByUsernameResponse(WEBSocketRequestType requestType, JsonObject request, String token) throws UserNotFoundException, InvalidUserNameException, InvalidTokenException {
         JsonObject response = new JsonObject();
@@ -101,9 +113,10 @@ public class WEBSocketService {
     // response.addProperty("type", requestType.toString());
     // return response;
 
-    public JsonObject prepareSendMessageResponse(WEBSocketRequestType requestType, JsonObject asJsonObject) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'prepareSendMessageResponse'");
+    public boolean prepareSendMessageResponse(WEBSocketRequestType requestType, JsonObject asJsonObject) {
+        String message = asJsonObject.toString();
+        log.debug(message);
+        return messageService.addMessage(message);
     }
 
     public JsonObject prepareGetChatsResponse(WEBSocketRequestType requestType, JsonObject asJsonObject, String token) {
@@ -132,6 +145,23 @@ public class WEBSocketService {
         chatRoutes.deleteChat(chat_id);
 
         response.addProperty("type", requestType.toString());
+        return response;
+    }
+
+    public JsonObject prepareGetMessagesResponse(WEBSocketRequestType requestType, JsonObject data) {
+        JsonObject response = new JsonObject();
+        response.addProperty("type", requestType.toString());
+        int chat_id = data.get("chat_id").getAsInt();
+        int offset = data.get("offset").getAsInt();
+        int limit = data.get("limit").getAsInt();
+        List<Message> messages = messageRoutes.getMessages(chat_id, offset, limit);
+        JsonArray list = new JsonArray();
+        if (messages != null && !messages.isEmpty()) {
+            for (Message message : messages) {
+                list.add(message.toJson());
+            }
+        }
+        response.add("messages", list);
         return response;
     }
 }

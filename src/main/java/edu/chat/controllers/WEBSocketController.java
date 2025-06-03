@@ -5,6 +5,8 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.java_websocket.WebSocket;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Component;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import edu.chat.routes.ParticipantsRouts;
 import edu.chat.routes.UserRoutes;
 import edu.chat.services.WEBSocketService;
 import edu.chat.views.enums.WEBSocketRequestType;
@@ -37,6 +40,9 @@ public class WEBSocketController extends WebSocketServer {
 
     @Autowired
     private ServerProperties serverProperties;
+
+    @Autowired
+    private ParticipantsRouts participantsRouts;
 
     public static String getServerData() {
         return WEBSC.getAddress().getAddress().getHostAddress() + ":" + WEBSC.getPort();
@@ -154,11 +160,33 @@ public class WEBSocketController extends WebSocketServer {
                 break;
             }
             case sendMessage: {
-                response = webSocketService.prepareSendMessageResponse(requestType, data);
+                response.addProperty("type", requestType.toString());
+                if (webSocketService.prepareSendMessageResponse(requestType, data)) {
+                    response.addProperty("success", true);
+                    // Handle dispatch to users
+                    int chat_id = data.get("chat_id").getAsInt();
+                    List<Integer> ids = participantsRouts.getFromChat(chat_id);
+                    ids.remove((Integer) data.get("user_id").getAsInt());// Exclude sender
+                    JsonObject participantMessage = new JsonObject();
+                    participantMessage.addProperty("type", WEBSocketRequestType.newMessage.toString());
+                    participantMessage.add("data", data);
+                    for (Integer id : ids) {
+                        log.debug("Sending data to user: " + id);
+                        if (clients.containsKey(id)) {
+                            clients.get(id).send(participantMessage.toString());
+                        }
+                    }
+                } else {
+                    response.addProperty("success", false);
+                }
                 break;
             }
             case deleteChat: {
                 response = webSocketService.prepareDeleteChatResponse(requestType, data);
+                break;
+            }
+            case getMessages: {
+                response = webSocketService.prepareGetMessagesResponse(requestType, data);
                 break;
             }
 

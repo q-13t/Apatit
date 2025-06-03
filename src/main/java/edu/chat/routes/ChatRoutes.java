@@ -155,12 +155,4 @@ public class ChatRoutes {
         }
     }
 
-    public boolean addMessage(String text, String timeStamp, int user_id, int chat_id, String status, String file_uuid, String type) {
-        try {
-            return jdbcTemplate.update("INSERT INTO message(text, time_stamp, user_id, chat_id, status, file_uuid, type)VALUES ( ?, ?, ?, ?, ?, ?, ?);", text, java.sql.Timestamp.valueOf(timeStamp), user_id, chat_id, status, file_uuid, type) == 1;
-        } catch (DataAccessException e) {
-            log.error(e.getMessage());
-            return false;
-        }
-    }
 }
