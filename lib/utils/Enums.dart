@@ -15,24 +15,24 @@ final statusWrapper = {Status.online: 'Online', Status.offline: 'Offline'};
 enum MessageType { text, image, video, audio, file }
 
 final messageTypeWrapper = {
-  MessageType.text: 'Text',
-  MessageType.image: 'Image',
-  MessageType.video: 'Video',
-  MessageType.audio: 'Audio',
-  MessageType.file: 'File',
+  MessageType.text: 'text',
+  MessageType.image: 'image',
+  MessageType.video: 'video',
+  MessageType.audio: 'audio',
+  MessageType.file: 'file',
 };
 
 enum MessageStatus { sent, seen, delivered, failed }
 
 final messageStatusWrapper = {
-  MessageStatus.sent: 'Sent',
-  MessageStatus.seen: 'Seen',
-  MessageStatus.delivered: 'Delivered',
-  MessageStatus.failed: 'Failed',
+  MessageStatus.sent: 'sent',
+  MessageStatus.seen: 'seen',
+  MessageStatus.delivered: 'delivered',
+  MessageStatus.failed: 'failed',
 };
 
 enum WSMType {
-  getMessage,
+  getMessages,
   sendMessage,
   deleteMessage,
   updateMessage,
@@ -45,11 +45,12 @@ enum WSMType {
   newChatPrivate,
   bind,
   deleteChat,
+  newMessage,
 }
 
 // ignore: non_constant_identifier_names
 final WSMTWrapper = {
-  WSMType.getMessage: "getMessage",
+  WSMType.getMessages: "getMessages",
   WSMType.sendMessage: "sendMessage",
   WSMType.deleteMessage: "deleteMessage",
   WSMType.updateMessage: "updateMessage",
@@ -62,4 +63,5 @@ final WSMTWrapper = {
   WSMType.newChatPrivate: "newChatPrivate",
   WSMType.bind: "bind",
   WSMType.deleteChat: "deleteChat",
+  WSMType.newMessage: "newMessage",
 };

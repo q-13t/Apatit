@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:Apatite/models/message_model.dart';
 import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
@@ -49,11 +48,6 @@ class NetworkController {
       bool valid = await NetworkController.askValidation(token);
       if (valid) {
         await NetworkController.setToken(token);
-        _getMe(token).then((meResp) {
-          _me = User.fromJson(jsonDecode(meResp));
-          websocketSend({"id": _me.id}, WSMType.bind);
-          getFile(_me.pfpUuid).then((value) => _me.pfp = value);
-        });
       } else {
         NetworkController.setToken('');
       }
@@ -84,7 +78,13 @@ class NetworkController {
       _channel = null;
       return;
     }
+    if (token == null) return;
     initWebSocket();
+    _getMe(token).then((meResp) {
+      _me = User.fromJson(jsonDecode(meResp));
+      websocketSend({"id": _me.id}, WSMType.bind);
+      getFile(_me.pfpUuid).then((value) => _me.pfp = value);
+    });
   }
 
   static void initWebSocket() {
@@ -280,7 +280,7 @@ class NetworkController {
       final secureStorage = FlutterSecureStorage();
       NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     } else if (response.statusCode == 200) {
-      _logger.debug("updatePassword response: ${response.statusCode} - reason: ${response.body}");
+      _logger.err("updatePassword response: ${response.statusCode} - reason: ${response.body}");
       _me.pfpUuid = fileName;
       if (newPfp != null) _me.setPfp(newPfp.readAsBytesSync());
     }
@@ -292,18 +292,5 @@ class NetworkController {
     return await http
         .get(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'})
         .then((response) => response.body);
-  }
-
-  static Future<int> sendMessage(MessageModel mineCurrent) async {
-    var url = Uri.http(baseUrlHttp, '/chat/message');
-    var body = mineCurrent.toJSON();
-    _logger.debug("sendMessage body: $body");
-    var response = await http.put(
-      url,
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'},
-      body: body,
-    );
-    _logger.debug("sendMessage response: ${response.statusCode} - reason: ${response.body}");
-    return response.statusCode;
   }
 }

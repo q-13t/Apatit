@@ -18,53 +18,85 @@ class ChatView extends StatefulWidget {
   final Function changePage;
 
   final ChatTileModel model;
-
+  static final Logger logger = Logger("ChatView");
   const ChatView({super.key, required this.changePage, required this.model});
 
   @override
-  State<ChatView> createState() => _ChatViewState();
+  State<ChatView> createState() => ChatViewState();
 }
 
-class _ChatViewState extends State<ChatView> {
+class ChatViewState extends State<ChatView> {
   final _scrollController = ScrollController();
   final ValueNotifier<List<MessageModel>> messages = ValueNotifier([]);
-  final List<User> participants = [];
+  static final List<User> _participants = [];
   String myInput = '';
-  final Logger _logger = Logger("ChatView");
   final _textController = TextEditingController();
 
+  static List<User> get participants => _participants;
+
   File? _file;
-  late MessageModel _mineCurrent;
+  late MessageModel _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
+
+  int offset = 0;
+  int limit = 10;
+  int lastLoad = 0;
 
   @override
   void initState() {
     super.initState();
-    NetworkController.getParticipants(widget.model.id).then((res) {
+
+    NetworkController.getParticipants(widget.model.id).then((res) async {
       var json = jsonDecode(res);
+      ChatView.logger.debug("Participants: $json");
       for (var u in json) {
         if (u['id'] == NetworkController.me.id) {
           participants.add(NetworkController.me);
-        } else if (u['pfpUUID'] != null) {
-          NetworkController.getFile(u['pfpUUID']).then((val) {
-            u['pfp'] = val;
-            participants.add(User.fromJson(u));
-          });
+        } else if (u['pfp_uuid'] != null) {
+          var pfp = await NetworkController.getFile(u['pfp_uuid']);
+
+          var user = User.fromJson(u);
+          user.pfp = pfp; // Update the pfp property with the loaded data
+          participants.add(user);
         } else {
           participants.add(User.fromJson(u));
         }
-        _logger.debug("Response to participants: ${participants}");
       }
-    });
+      NetworkController.messageStreamController.stream.listen((message) {
+        var data = jsonDecode(message.toString());
+        if (data['type'] == WSMTWrapper[WSMType.getMessages]) {
+          var list =
+              List.generate(
+                data['messages'].length,
+                (index) => MessageModel.fromJson(data['messages'][index]),
+              ).reversed.toList();
+          messages.value = list + messages.value;
+          lastLoad = list.length;
+          // scrollToBottom();
+        } else if (data['type'] == WSMTWrapper[WSMType.newMessage]) {
+          messages.value.add(MessageModel.fromJson(data['data']));
+        }
+      });
 
-    // TODO: load 10 latest messages
-
-    // The message is always bound to the user
-    _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
+      NetworkController.websocketSend({
+        'offset': offset,
+        'limit': limit,
+        'chat_id': widget.model.id,
+      }, WSMType.getMessages);
+      _scrollController.addListener(_loadMoreMessages);
+      // The message is always bound to the user
     });
+  }
+
+  void _loadMoreMessages() {
+    if (_scrollController.position.pixels == _scrollController.position.minScrollExtent) {
+      if (lastLoad < limit) return;
+      offset += limit;
+      NetworkController.websocketSend({
+        'offset': offset,
+        'limit': limit,
+        'chat_id': widget.model.id,
+      }, WSMType.getMessages);
+    }
   }
 
   String formatTimestamp() {
@@ -76,29 +108,18 @@ class _ChatViewState extends State<ChatView> {
     if (_mineCurrent.data != null) {
       return NetworkController.uploadFile(_mineCurrent.data!, _mineCurrent.fileUuid!).then((res) {
         if (res != 200) return false;
-        _logger.debug("Message: ${_mineCurrent}");
-        return NetworkController.sendMessage(_mineCurrent).then((res) {
-          if (res != 200) return false;
-          _logger.debug("Message sent");
-          return true;
-          // Here comes the notification to the websocket
-        });
+        ChatView.logger.debug("Message: ${_mineCurrent}");
+        NetworkController.websocketSend(_mineCurrent.toDynamic(), WSMType.sendMessage);
+        return true;
       });
     } else {
-      return NetworkController.sendMessage(_mineCurrent).then((res) {
-        if (res == 200) {
-          _logger.debug("Message sent");
-          // Here comes the notification to the websocket
-          return true;
-        } else {
-          return false;
-        }
-      });
+      NetworkController.websocketSend(_mineCurrent.toDynamic(), WSMType.sendMessage);
+      return true;
     }
   }
 
   void sendMessage() async {
-    _logger.debug("Messages: $myInput");
+    ChatView.logger.debug("Messages: $myInput");
 
     if ((_mineCurrent.text == null || _mineCurrent.text!.isEmpty) && _mineCurrent.fileUuid == null) return;
     _mineCurrent.timeStamp = formatTimestamp();
@@ -141,12 +162,12 @@ class _ChatViewState extends State<ChatView> {
       _mineCurrent.data = await _file!.readAsBytes();
       setState(() {});
     } catch (e) {
-      _logger.err(e.toString());
+      ChatView.logger.err(e.toString());
     }
   }
 
   MessageType resolveMessageType(String extension) {
-    _logger.info("Resolving extension: $extension");
+    ChatView.logger.debug("Resolving extension: $extension");
     switch (extension) {
       case ".mp4" || ".mov" || ".mkv":
         return MessageType.video;
@@ -181,7 +202,7 @@ class _ChatViewState extends State<ChatView> {
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
-    messages.dispose();
+    // messages.dispose();
     super.dispose();
   }
 
@@ -204,12 +225,13 @@ class _ChatViewState extends State<ChatView> {
                   if (value.isEmpty) {
                     return WowSoEmpty();
                   }
-                  _logger.debug("Messages: ${value[value.length - 1]}");
+                  ChatView.logger.debug("Messages: ${value[value.length - 1]}");
                   return ListView.builder(
                     controller: _scrollController,
                     itemCount: value.length,
                     itemBuilder: (context, index) {
-                      return MessageTile(message: value[index], user: NetworkController.me);
+                      if (participants.isEmpty) return Container();
+                      return MessageTile(message: value[index]);
                     },
                   );
                 },

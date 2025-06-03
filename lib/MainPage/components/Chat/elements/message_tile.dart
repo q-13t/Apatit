@@ -1,24 +1,29 @@
+import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/audio_player.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/video_player.dart';
 import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/models/message_model.dart';
-import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
+import 'package:Apatite/utils/logger.dart';
 import 'package:flutter/material.dart';
 
 class MessageTile extends StatefulWidget {
   final MessageModel message;
-  final User user;
+  static final Logger logger = Logger("MessageTile");
 
-  const MessageTile({super.key, required this.message, required this.user});
+  const MessageTile({super.key, required this.message});
 
   @override
   State<MessageTile> createState() => _MessageTileState();
 }
 
-class _MessageTileState extends State<MessageTile> {
+class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Align(
       alignment: (widget.message.sender == NetworkController.me.id) ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -35,19 +40,29 @@ class _MessageTileState extends State<MessageTile> {
           children: [
             Row(
               children: [
-                CircleAvatar(child: widget.user.pfp != null ? Image.memory(widget.user.pfp!) : Icon(Icons.person)),
+                CircleAvatar(
+                  child:
+                      (ChatViewState.participants.firstWhere((element) => element.id == widget.message.sender).pfp !=
+                              null)
+                          ? Image.memory(
+                            ChatViewState.participants
+                                .firstWhere((element) => element.id == widget.message.sender)
+                                .pfp!,
+                          )
+                          : Icon(Icons.person),
+                ),
                 const SizedBox(width: 10),
-                Text(widget.user.username, style: TextStyle(fontSize: 20)),
+                Text(
+                  ChatViewState.participants.firstWhere((element) => element.id == widget.message.sender).username,
+                  style: TextStyle(fontSize: 20),
+                ),
               ],
             ),
             Padding(
               padding: EdgeInsets.all(5),
               child: Container(height: 2, width: double.infinity, color: Colors.cyan[500]),
             ),
-            FutureBuilder(
-              future: buildMedia(context, widget.message),
-              builder: (context, snapshot) => snapshot.data ?? CircularProgressIndicator(),
-            ),
+            buildMedia(context, widget.message),
             Text(widget.message.text ?? "", style: TextStyle(fontSize: 20), textAlign: TextAlign.start),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -63,25 +78,31 @@ class _MessageTileState extends State<MessageTile> {
     );
   }
 
-  Future<Widget> buildMedia(BuildContext context, MessageModel model) async {
-    var data = model.data;
-    if (model.sender != NetworkController.me.id) {
-      data = await NetworkController.getFile(model.fileUuid);
-    }
-    if (data == null) return Container();
-
-    switch (model.type) {
-      case MessageType.image:
-        return Image(image: MemoryImage(data));
-      case MessageType.video:
-        return CustomVideoPlayer(data: data);
-      case MessageType.audio:
-        return CustomAudioPlayer(data: data);
-      case MessageType.file:
-        return Placeholder();
-      default:
-        return Container();
-    }
+  Widget buildMedia(BuildContext context, MessageModel model) {
+    return FutureBuilder(
+      future: NetworkController.getFile(model.fileUuid),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          if (snapshot.data!.isEmpty) {
+            return Container();
+          }
+          switch (model.type) {
+            case MessageType.image:
+              return Image(image: MemoryImage(snapshot.data!));
+            case MessageType.video:
+              return CustomVideoPlayer(data: snapshot.data);
+            case MessageType.audio:
+              return CustomAudioPlayer(data: snapshot.data);
+            case MessageType.file:
+              return Placeholder();
+            default:
+              return Container();
+          }
+        } else {
+          return CircularProgressIndicator();
+        }
+      },
+    );
   }
 
   getIcon(BuildContext context, MessageStatus type) {

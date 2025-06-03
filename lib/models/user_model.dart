@@ -9,12 +9,12 @@ class User {
   User(this.id, this.username, this.pfpUuid);
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(json['id'], json['username'], json['pfpUUID']);
+    return User(json['id'], json['username'], json['pfp_uuid']);
   }
 
   @override
   String toString() {
-    return 'User{id: $id, username: $username, pfpUuid: $pfpUuid}';
+    return 'User{id: $id, username: $username, pfp_uuid: $pfpUuid}';
   }
 
   void setPfp(Uint8List pfp) => this.pfp = pfp;
