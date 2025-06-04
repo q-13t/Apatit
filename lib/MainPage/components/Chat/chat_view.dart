@@ -78,7 +78,7 @@ class ChatViewState extends State<ChatView> {
           messages.value = messages.value + list;
           lastLoad = list.length;
         } else if (data['type'] == WSMTWrapper[WSMType.newMessage]) {
-          messages.value.add(MessageModel.fromJson(data['data']));
+          messages.value = [MessageModel.fromJson(data['data']), ...messages.value];
         }
       });
 
@@ -137,11 +137,10 @@ class ChatViewState extends State<ChatView> {
     // Send message
     await dispatchMessage();
 
-    messages.value.add(_mineCurrent);
+    messages.value = [_mineCurrent, ...messages.value];
     _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
     _textController.clear();
     clearFileSelection();
-    scrollToBottom();
   }
 
   void addMyText(String text) {
