@@ -109,8 +109,6 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
     switch (type) {
       case MessageStatus.delivered:
         return Icon(Icons.done_outline_rounded, size: 15);
-      case MessageStatus.failed:
-        return Icon(Icons.error, size: 15);
       case MessageStatus.seen:
         return Icon(Icons.done_all, size: 15);
       case MessageStatus.sent:

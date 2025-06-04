@@ -46,6 +46,7 @@ class MessageModel {
 
   String toJSON() {
     return jsonEncode({
+      "id": id,
       "user_id": sender,
       "chat_id": chatId,
       "text": text,
@@ -58,6 +59,7 @@ class MessageModel {
 
   Map<String, dynamic> toDynamic() {
     return {
+      "id": id,
       "user_id": sender,
       "chat_id": chatId,
       "text": text,
@@ -66,5 +68,18 @@ class MessageModel {
       "type": type!.name,
       "file_uuid": fileUuid,
     };
+  }
+
+  MessageModel copyWith({required MessageStatus status}) {
+    return MessageModel(
+      id: id,
+      sender: sender,
+      text: text,
+      status: status,
+      timeStamp: timeStamp,
+      type: type,
+      fileUuid: fileUuid,
+      chatId: chatId,
+    );
   }
 }

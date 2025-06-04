@@ -14,6 +14,7 @@ import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:visibility_detector/visibility_detector.dart';
 
 class ChatView extends StatefulWidget {
   final Function changePage;
@@ -62,7 +63,7 @@ class ChatViewState extends State<ChatView> {
       }
       NetworkController.messageStreamController.stream.listen((message) {
         var data = jsonDecode(message.toString());
-        switch (WSMType.values.firstWhere((element) => element.name == data['type'])) {
+        switch (WSMType.values.firstWhere((element) => element.name == data['type'], orElse: () => WSMType.def)) {
           case WSMType.loadMessages:
             {
               var list =
@@ -90,10 +91,23 @@ class ChatViewState extends State<ChatView> {
               messages.value = [MessageModel.fromJson(data['data']), ...messages.value];
               break;
             }
+          case WSMType.updateMessage:
+            {
+              var message = MessageModel.fromJson(jsonDecode(data['data']));
+              var tmp = messages.value;
+              var index = tmp.indexWhere((element) => element.id == message.id);
+              tmp[index] = message;
+              messages.value = tmp;
+              // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+              messages.notifyListeners();
+              break;
+            }
           case WSMType.sendMessage:
             {
-              // TODO: Update message status to delivered
-              ChatView.logger.debug("Message: ${data['data']}");
+              var message = MessageModel.fromJson(jsonDecode(data['data']));
+              messages.value = [message, ...messages.value];
+              // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+              messages.notifyListeners();
               break;
             }
           case WSMType.error:
@@ -101,6 +115,7 @@ class ChatViewState extends State<ChatView> {
               ToastService().showToast(data['message']);
               break;
             }
+          case WSMType.def:
           default:
             {
               break;
@@ -163,7 +178,7 @@ class ChatViewState extends State<ChatView> {
     // Send message
     await dispatchMessage();
 
-    messages.value = [_mineCurrent, ...messages.value];
+    // messages.value = [_mineCurrent, ...messages.value];
     _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
     _textController.clear();
     clearFileSelection();
@@ -256,7 +271,24 @@ class ChatViewState extends State<ChatView> {
                     controller: _scrollController,
                     itemCount: value.length,
                     itemBuilder: (context, index) {
-                      return MessageTile(key: UniqueKey(), message: value[index]);
+                      return VisibilityDetector(
+                        key: Key(value[index].id.toString()),
+                        onVisibilityChanged: (info) {
+                          ChatView.logger.debug(
+                            "Visible: ${info.visibleFraction}, status: ${value[index].status}, sender: ${value[index].sender}",
+                          );
+                          if (info.visibleFraction >= 0.5 &&
+                              value[index].status == MessageStatus.delivered &&
+                              value[index].sender != NetworkController.me.id) {
+                            ChatView.logger.debug("Visible: ${value[index]}");
+                            var updated = value[index];
+                            updated.status = MessageStatus.seen;
+                            var dynamic = updated.toDynamic();
+                            NetworkController.websocketSend(dynamic, WSMType.updateMessage);
+                          }
+                        },
+                        child: MessageTile(key: UniqueKey(), message: value[index]),
+                      );
                     },
                   );
                 },

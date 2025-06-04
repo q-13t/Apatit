@@ -22,13 +22,12 @@ final messageTypeWrapper = {
   MessageType.file: 'file',
 };
 
-enum MessageStatus { sent, seen, delivered, failed }
+enum MessageStatus { sent, seen, delivered }
 
 final messageStatusWrapper = {
   MessageStatus.sent: 'sent',
   MessageStatus.seen: 'seen',
   MessageStatus.delivered: 'delivered',
-  MessageStatus.failed: 'failed',
 };
 
 enum WSMType {
@@ -48,6 +47,7 @@ enum WSMType {
   deleteChat,
   newMessage,
   loadMessages,
+  def,
 }
 
 // ignore: non_constant_identifier_names
