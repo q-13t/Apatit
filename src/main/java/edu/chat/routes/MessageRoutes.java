@@ -38,12 +38,15 @@ public class MessageRoutes {
     private JdbcTemplate jdbcTemplate;
     private Logger log = LogManager.getLogger(MessageRoutes.class.getName());
 
-    public boolean addMessage(String text, String timeStamp, int user_id, int chat_id, String status, String file_uuid, String type) {
+    public int addMessage(String text, String timeStamp, int user_id, int chat_id, String status, String file_uuid, String type) {
         try {
-            return jdbcTemplate.update("INSERT INTO message(text, time_stamp, user_id, chat_id, status, file_uuid, type)VALUES ( ?, ?, ?, ?, ?, ?, ?);", text, java.sql.Timestamp.valueOf(timeStamp), user_id, chat_id, status, file_uuid, type) == 1;
+            Integer id = jdbcTemplate.queryForObject("INSERT INTO message(text, time_stamp, user_id, chat_id, status, file_uuid, type)VALUES ( ?, ?, ?, ?, ?, ?, ?) RETURNING id;", Integer.class, text, java.sql.Timestamp.valueOf(timeStamp), user_id, chat_id, status, file_uuid, type);
+            if (id == null)
+                return -1;
+            return id;
         } catch (DataAccessException e) {
             log.error(e.getMessage());
-            return false;
+            return -1;
         }
     }
 
@@ -53,6 +56,16 @@ public class MessageRoutes {
         } catch (DataAccessException e) {
             log.error(e.getMessage());
             return null;
+        }
+    }
+
+    public boolean updateMessage(int id, String status) {
+        try {
+            return jdbcTemplate.update("UPDATE message SET status = ? WHERE id = ?", status, id) == 1;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+
         }
     }
 }

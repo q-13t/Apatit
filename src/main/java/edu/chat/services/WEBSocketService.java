@@ -113,7 +113,7 @@ public class WEBSocketService {
     // response.addProperty("type", requestType.toString());
     // return response;
 
-    public boolean prepareSendMessageResponse(WEBSocketRequestType requestType, JsonObject asJsonObject) {
+    public int prepareSendMessageResponse(WEBSocketRequestType requestType, JsonObject asJsonObject) {
         String message = asJsonObject.toString();
         log.debug(message);
         return messageService.addMessage(message);
@@ -163,5 +163,12 @@ public class WEBSocketService {
         }
         response.add("messages", list);
         return response;
+    }
+
+    public boolean prepareUpdateMessageResponse(WEBSocketRequestType requestType, JsonObject data) {
+        String message = data.toString();
+        log.debug(message);
+        messageService.updateMessage(message);
+        return true;
     }
 }

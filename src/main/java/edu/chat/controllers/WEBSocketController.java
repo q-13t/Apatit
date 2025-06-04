@@ -120,6 +120,32 @@ public class WEBSocketController extends WebSocketServer {
     }
 
     @Override
+    public void onError(WebSocket conn, Exception ex) {
+        log.error(ex.getMessage());
+    }
+
+    @Override
+    public void onStart() {
+        log.info("ChatServer started on: " + getServerData());
+    }
+
+    private void dispatchToChat(JsonObject data, int chat_id, WEBSocketRequestType type) {
+        List<Integer> ids = participantsRouts.getFromChat(chat_id);
+        if (type != WEBSocketRequestType.updateMessage) {
+            ids.remove((Integer) data.get("user_id").getAsInt());// Exclude sender
+        }
+        JsonObject participantMessage = new JsonObject();
+        participantMessage.addProperty("type", type.toString());
+        participantMessage.addProperty("data", data.toString());
+        for (Integer id : ids) {
+            log.debug("Sending data to user: " + id);
+            if (clients.containsKey(id)) {
+                clients.get(id).send(participantMessage.toString());
+            }
+        }
+    }
+
+    @Override
     public void onMessage(WebSocket conn, String message) {
         // log.info("Message from " + parseUserShort(conn) + ": " + message);
         JsonObject request = new Gson().fromJson(message, JsonObject.class);
@@ -161,22 +187,16 @@ public class WEBSocketController extends WebSocketServer {
             }
             case sendMessage: {
                 response.addProperty("type", requestType.toString());
-                if (webSocketService.prepareSendMessageResponse(requestType, data)) {
+                int id = webSocketService.prepareSendMessageResponse(requestType, data);
+                if (id != -1) {
+                    data.remove("status");
+                    data.addProperty("status", "delivered");
+                    data.remove("id");
+                    data.addProperty("id", id);
                     response.addProperty("success", true);
                     response.addProperty("data", data.toString());
                     // Handle dispatch to users
-                    int chat_id = data.get("chat_id").getAsInt();
-                    List<Integer> ids = participantsRouts.getFromChat(chat_id);
-                    ids.remove((Integer) data.get("user_id").getAsInt());// Exclude sender
-                    JsonObject participantMessage = new JsonObject();
-                    participantMessage.addProperty("type", WEBSocketRequestType.newMessage.toString());
-                    participantMessage.add("data", data);
-                    for (Integer id : ids) {
-                        log.debug("Sending data to user: " + id);
-                        if (clients.containsKey(id)) {
-                            clients.get(id).send(participantMessage.toString());
-                        }
-                    }
+                    dispatchToChat(data, data.get("chat_id").getAsInt(), requestType);
                 } else {
                     response.addProperty("success", false);
                 }
@@ -191,7 +211,17 @@ public class WEBSocketController extends WebSocketServer {
                 response = webSocketService.prepareGetMessagesResponse(requestType, data);
                 break;
             }
+            case updateMessage: {
+                if (webSocketService.prepareUpdateMessageResponse(requestType, data)) {
+                    response.addProperty("success", true);
+                    response.addProperty("data", data.toString());
+                    dispatchToChat(data, data.get("chat_id").getAsInt(), requestType);
+                } else {
+                    response.addProperty("success", false);
+                }
 
+                break;
+            }
             default: {
                 throw new UnsupportedOperationException("Unsupported request type: " + requestType);
             }
@@ -201,16 +231,6 @@ public class WEBSocketController extends WebSocketServer {
             response = prepareErrorResponse("Error processing request: " + e.getMessage());
         }
         conn.send(response.toString());
-    }
-
-    @Override
-    public void onError(WebSocket conn, Exception ex) {
-        log.error(ex.getMessage());
-    }
-
-    @Override
-    public void onStart() {
-        log.info("ChatServer started on: " + getServerData());
     }
 
 }

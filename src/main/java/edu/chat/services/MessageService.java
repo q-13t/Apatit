@@ -18,7 +18,7 @@ public class MessageService {
     @Autowired
     private MessageRoutes messageRoutes;
 
-    public boolean addMessage(String message) {
+    public int addMessage(String message) {
         try {
 
             JsonObject map = new Gson().fromJson(message, JsonObject.class);
@@ -35,15 +35,23 @@ public class MessageService {
             String timeStamp = map.get("timeStamp").getAsString();
             int user_id = map.get("user_id").getAsInt();
             int chat_id = map.get("chat_id").getAsInt();
-            String status = map.get("status").getAsString();
+            String status = "delivered";
             String type = map.get("type").getAsString();
-            if (messageRoutes.addMessage(text, timeStamp, user_id, chat_id, status, file_uuid, type)) {
-                return true;
-            } else {
-                return false;
-            }
+            return messageRoutes.addMessage(text, timeStamp, user_id, chat_id, status, file_uuid, type);
         } catch (Exception e) {
             log.error("Error during message sending: " + e.getMessage());
+            return -1;
+        }
+    }
+
+    public boolean updateMessage(String message) {
+        try {
+            JsonObject map = new Gson().fromJson(message, JsonObject.class);
+            String status = map.get("status").getAsString();
+            int id = map.get("id").getAsInt();
+            return messageRoutes.updateMessage(id, status);
+        } catch (Exception e) {
+            log.error("Error during message updating: " + e.getMessage());
             return false;
         }
     }
