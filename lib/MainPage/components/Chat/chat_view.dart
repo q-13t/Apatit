@@ -31,7 +31,6 @@ class ChatViewState extends State<ChatView> {
   static final List<User> _participants = [];
   String myInput = '';
   final _textController = TextEditingController();
-
   static List<User> get participants => _participants;
 
   File? _file;
@@ -53,9 +52,8 @@ class ChatViewState extends State<ChatView> {
           participants.add(NetworkController.me);
         } else if (u['pfp_uuid'] != null) {
           var pfp = await NetworkController.getFile(u['pfp_uuid']);
-
           var user = User.fromJson(u);
-          user.pfp = pfp; // Update the pfp property with the loaded data
+          user.pfp = pfp;
           participants.add(user);
         } else {
           participants.add(User.fromJson(u));
@@ -63,15 +61,22 @@ class ChatViewState extends State<ChatView> {
       }
       NetworkController.messageStreamController.stream.listen((message) {
         var data = jsonDecode(message.toString());
-        if (data['type'] == WSMTWrapper[WSMType.getMessages]) {
+        if (data['type'] == WSMTWrapper[WSMType.loadMessages]) {
           var list =
               List.generate(
                 data['messages'].length,
                 (index) => MessageModel.fromJson(data['messages'][index]),
-              ).reversed.toList();
-          messages.value = list + messages.value;
+              ).toList();
+          messages.value = messages.value + list;
           lastLoad = list.length;
-          // scrollToBottom();
+        } else if (data['type'] == WSMTWrapper[WSMType.getMessages]) {
+          var list =
+              List.generate(
+                data['messages'].length,
+                (index) => MessageModel.fromJson(data['messages'][index]),
+              ).toList();
+          messages.value = messages.value + list;
+          lastLoad = list.length;
         } else if (data['type'] == WSMTWrapper[WSMType.newMessage]) {
           messages.value.add(MessageModel.fromJson(data['data']));
         }
@@ -83,19 +88,18 @@ class ChatViewState extends State<ChatView> {
         'chat_id': widget.model.id,
       }, WSMType.getMessages);
       _scrollController.addListener(_loadMoreMessages);
-      // The message is always bound to the user
     });
   }
 
   void _loadMoreMessages() {
-    if (_scrollController.position.pixels == _scrollController.position.minScrollExtent) {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
       if (lastLoad < limit) return;
       offset += limit;
       NetworkController.websocketSend({
         'offset': offset,
         'limit': limit,
         'chat_id': widget.model.id,
-      }, WSMType.getMessages);
+      }, WSMType.loadMessages);
     }
   }
 
@@ -105,10 +109,10 @@ class ChatViewState extends State<ChatView> {
   }
 
   Future<bool> dispatchMessage() async {
+    // ChatView.logger.debug("Message: ${_mineCurrent}");
     if (_mineCurrent.data != null) {
       return NetworkController.uploadFile(_mineCurrent.data!, _mineCurrent.fileUuid!).then((res) {
         if (res != 200) return false;
-        ChatView.logger.debug("Message: ${_mineCurrent}");
         NetworkController.websocketSend(_mineCurrent.toDynamic(), WSMType.sendMessage);
         return true;
       });
@@ -137,9 +141,7 @@ class ChatViewState extends State<ChatView> {
     _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
     _textController.clear();
     clearFileSelection();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      scrollToBottom();
-    });
+    scrollToBottom();
   }
 
   void addMyText(String text) {
@@ -181,15 +183,13 @@ class ChatViewState extends State<ChatView> {
   }
 
   void scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(seconds: 1),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(seconds: 1),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   void clearFileSelection() {
@@ -200,10 +200,10 @@ class ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
+    super.dispose();
+    // messages.dispose();
     _textController.dispose();
     _scrollController.dispose();
-    // messages.dispose();
-    super.dispose();
   }
 
   @override
@@ -227,10 +227,10 @@ class ChatViewState extends State<ChatView> {
                   }
                   ChatView.logger.debug("Messages: ${value[value.length - 1]}");
                   return ListView.builder(
+                    reverse: true,
                     controller: _scrollController,
                     itemCount: value.length,
                     itemBuilder: (context, index) {
-                      if (participants.isEmpty) return Container();
                       return MessageTile(message: value[index]);
                     },
                   );

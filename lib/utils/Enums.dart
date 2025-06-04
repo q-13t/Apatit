@@ -46,6 +46,7 @@ enum WSMType {
   bind,
   deleteChat,
   newMessage,
+  loadMessages,
 }
 
 // ignore: non_constant_identifier_names
@@ -64,4 +65,5 @@ final WSMTWrapper = {
   WSMType.bind: "bind",
   WSMType.deleteChat: "deleteChat",
   WSMType.newMessage: "newMessage",
+  WSMType.loadMessages: "loadMessages",
 };
