@@ -163,6 +163,7 @@ public class WEBSocketController extends WebSocketServer {
                 response.addProperty("type", requestType.toString());
                 if (webSocketService.prepareSendMessageResponse(requestType, data)) {
                     response.addProperty("success", true);
+                    response.addProperty("data", data.toString());
                     // Handle dispatch to users
                     int chat_id = data.get("chat_id").getAsInt();
                     List<Integer> ids = participantsRouts.getFromChat(chat_id);
@@ -185,6 +186,7 @@ public class WEBSocketController extends WebSocketServer {
                 response = webSocketService.prepareDeleteChatResponse(requestType, data);
                 break;
             }
+            case loadMessages:
             case getMessages: {
                 response = webSocketService.prepareGetMessagesResponse(requestType, data);
                 break;
