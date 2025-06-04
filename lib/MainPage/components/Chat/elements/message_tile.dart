@@ -88,11 +88,11 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
           }
           switch (model.type) {
             case MessageType.image:
-              return Image(image: MemoryImage(snapshot.data!));
+              return Image(key: UniqueKey(), image: MemoryImage(snapshot.data!));
             case MessageType.video:
-              return CustomVideoPlayer(data: snapshot.data);
+              return CustomVideoPlayer(key: UniqueKey(), data: snapshot.data);
             case MessageType.audio:
-              return CustomAudioPlayer(data: snapshot.data);
+              return CustomAudioPlayer(key: UniqueKey(), data: snapshot.data);
             case MessageType.file:
               return Placeholder();
             default:

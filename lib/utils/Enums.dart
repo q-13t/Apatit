@@ -32,6 +32,7 @@ final messageStatusWrapper = {
 };
 
 enum WSMType {
+  error,
   getMessages,
   sendMessage,
   deleteMessage,

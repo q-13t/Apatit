@@ -49,9 +49,9 @@ class MessageModel {
       "user_id": sender,
       "chat_id": chatId,
       "text": text,
-      "status": messageStatusWrapper[status].toString(),
+      "status": status!.name,
       "timeStamp": timeStamp,
-      "type": messageTypeWrapper[type].toString(),
+      "type": type,
       "file_uuid": fileUuid,
     });
   }
@@ -61,9 +61,9 @@ class MessageModel {
       "user_id": sender,
       "chat_id": chatId,
       "text": text,
-      "status": messageStatusWrapper[status].toString(),
+      "status": status!.name,
       "timeStamp": timeStamp,
-      "type": messageTypeWrapper[type].toString(),
+      "type": type!.name,
       "file_uuid": fileUuid,
     };
   }

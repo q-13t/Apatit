@@ -10,6 +10,7 @@ import 'package:Apatite/models/message_model.dart';
 import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
+import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
@@ -61,24 +62,49 @@ class ChatViewState extends State<ChatView> {
       }
       NetworkController.messageStreamController.stream.listen((message) {
         var data = jsonDecode(message.toString());
-        if (data['type'] == WSMTWrapper[WSMType.loadMessages]) {
-          var list =
-              List.generate(
-                data['messages'].length,
-                (index) => MessageModel.fromJson(data['messages'][index]),
-              ).toList();
-          messages.value = messages.value + list;
-          lastLoad = list.length;
-        } else if (data['type'] == WSMTWrapper[WSMType.getMessages]) {
-          var list =
-              List.generate(
-                data['messages'].length,
-                (index) => MessageModel.fromJson(data['messages'][index]),
-              ).toList();
-          messages.value = messages.value + list;
-          lastLoad = list.length;
-        } else if (data['type'] == WSMTWrapper[WSMType.newMessage]) {
-          messages.value = [MessageModel.fromJson(data['data']), ...messages.value];
+        switch (WSMType.values.firstWhere((element) => element.name == data['type'])) {
+          case WSMType.loadMessages:
+            {
+              var list =
+                  List.generate(
+                    data['messages'].length,
+                    (index) => MessageModel.fromJson(data['messages'][index]),
+                  ).toList();
+              messages.value = messages.value + list;
+              lastLoad = list.length;
+              break;
+            }
+          case WSMType.getMessages:
+            {
+              var list =
+                  List.generate(
+                    data['messages'].length,
+                    (index) => MessageModel.fromJson(data['messages'][index]),
+                  ).toList();
+              messages.value = messages.value + list;
+              lastLoad = list.length;
+              break;
+            }
+          case WSMType.newMessage:
+            {
+              messages.value = [MessageModel.fromJson(data['data']), ...messages.value];
+              break;
+            }
+          case WSMType.sendMessage:
+            {
+              // TODO: Update message status to delivered
+              ChatView.logger.debug("Message: ${data['data']}");
+              break;
+            }
+          case WSMType.error:
+            {
+              ToastService().showToast(data['message']);
+              break;
+            }
+          default:
+            {
+              break;
+            }
         }
       });
 
@@ -92,8 +118,8 @@ class ChatViewState extends State<ChatView> {
   }
 
   void _loadMoreMessages() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-      if (lastLoad < limit) return;
+    if ((_scrollController.position.pixels >= (_scrollController.position.maxScrollExtent - 200)) &&
+        (lastLoad == limit)) {
       offset += limit;
       NetworkController.websocketSend({
         'offset': offset,
@@ -109,7 +135,7 @@ class ChatViewState extends State<ChatView> {
   }
 
   Future<bool> dispatchMessage() async {
-    // ChatView.logger.debug("Message: ${_mineCurrent}");
+    ChatView.logger.debug("Message: ${_mineCurrent.toDynamic()}");
     if (_mineCurrent.data != null) {
       return NetworkController.uploadFile(_mineCurrent.data!, _mineCurrent.fileUuid!).then((res) {
         if (res != 200) return false;
@@ -230,7 +256,7 @@ class ChatViewState extends State<ChatView> {
                     controller: _scrollController,
                     itemCount: value.length,
                     itemBuilder: (context, index) {
-                      return MessageTile(message: value[index]);
+                      return MessageTile(key: UniqueKey(), message: value[index]);
                     },
                   );
                 },
