@@ -53,9 +53,9 @@ class ChatViewState extends State<ChatView> {
         if (u['id'] == NetworkController.me.id) {
           participants.add(NetworkController.me);
         } else if (u['pfp_uuid'] != null) {
-          var pfp = await NetworkController.getFile(u['pfp_uuid']);
+          var file = await NetworkController.getFile(u['pfp_uuid']);
           var user = User.fromJson(u);
-          user.pfp = pfp;
+          user.pfp = file?.readAsBytesSync();
           participants.add(user);
         } else {
           participants.add(User.fromJson(u));

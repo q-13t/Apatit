@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:just_audio/just_audio.dart';
-import 'package:path_provider/path_provider.dart';
 
 class CustomAudioPlayer extends StatefulWidget {
-  final Uint8List? data;
+  final File? data;
 
   const CustomAudioPlayer({super.key, required this.data});
 
@@ -51,10 +49,7 @@ class _CustomAudioPlayerState extends State<CustomAudioPlayer> with AutomaticKee
     });
   }
 
-  Future<void> _initAudio(Uint8List data) async {
-    final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.mp3');
-    await file.writeAsBytes(data);
+  Future<void> _initAudio(File file) async {
     await _player.setFilePath(file.path);
     setState(() {
       _isInitialized = true;

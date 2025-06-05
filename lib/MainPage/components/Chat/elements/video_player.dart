@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 
 class CustomVideoPlayer extends StatefulWidget {
-  final Uint8List? data;
+  final File? data;
 
   const CustomVideoPlayer({super.key, required this.data});
 
@@ -29,12 +27,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
     }
   }
 
-  Future<void> _initializeVideo(Uint8List videoBytes) async {
-    final tempDir = await getTemporaryDirectory();
-    final filePath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.mp4';
-    final file = await File(filePath).writeAsBytes(videoBytes);
+  Future<void> _initializeVideo(File file) async {
     _controller = VideoPlayerController.file(file);
-
     await _controller!.initialize();
     setState(() {});
   }

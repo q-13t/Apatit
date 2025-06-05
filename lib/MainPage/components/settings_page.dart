@@ -78,11 +78,10 @@ class _SettingsPageState extends State<SettingsPage> {
         future: NetworkController.getFile(NetworkController.me.pfpUuid),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            _oldPfp = snapshot.data;
-            NetworkController.me.pfp = snapshot.data;
-            return CircleAvatar(
-              child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.memory(snapshot.data!)),
-            );
+            Uint8List? data = snapshot.data?.readAsBytesSync();
+            _oldPfp = data;
+            NetworkController.me.pfp = data;
+            return CircleAvatar(child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.memory(data!)));
           } else {
             return CircularProgressIndicator();
           }

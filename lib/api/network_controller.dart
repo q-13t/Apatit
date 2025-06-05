@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:path_provider/path_provider.dart';
 
 class NetworkController {
   static NetworkController _instance = NetworkController._();
@@ -26,6 +27,7 @@ class NetworkController {
   static final Map<String, Uint8List?> _pfpCache = {};
   static late SharedPreferences _prefs;
   static late Logger _logger;
+  static late Directory tempDir; // = await getTemporaryDirectory();
 
   static User _me = User(-1, "", "");
 
@@ -42,6 +44,7 @@ class NetworkController {
   static Future<void> init() async {
     _logger = Logger("NetworkController");
     _logger.debug("Initializing Network Controller");
+    tempDir = await getTemporaryDirectory();
     _prefs = await SharedPreferences.getInstance();
     final token = _prefs.getString('token');
     if (token != null && token != '') {
@@ -83,7 +86,7 @@ class NetworkController {
     _getMe(token).then((meResp) {
       _me = User.fromJson(jsonDecode(meResp));
       websocketSend({"id": _me.id}, WSMType.bind);
-      getFile(_me.pfpUuid).then((value) => _me.pfp = value);
+      getFile(_me.pfpUuid).then((value) => _me.pfp = value?.readAsBytesSync());
     });
   }
 
@@ -194,6 +197,7 @@ class NetworkController {
 
   static void logout() {
     _me = User(-1, "", "");
+    tempDir.delete(recursive: true);
     setToken('');
   }
 
@@ -212,12 +216,27 @@ class NetworkController {
     return response.statusCode;
   }
 
-  static Future<Uint8List> getFile(String? fileUuid) {
-    if (fileUuid == null) return Future.value(Uint8List(0));
-    var url = Uri.http(baseUrlHttp, '/file', {'uuid': fileUuid});
-    return http
-        .get(url, headers: {'Content-Type': 'application/octet-stream', 'Authorization': 'Bearer ${jwtNotifier.value}'})
-        .then((response) => response.bodyBytes);
+  static Future<File?> getFile(String? fileUuid) async {
+    if (fileUuid == null) return null;
+    final file = File('${tempDir.path}/$fileUuid');
+
+    if (await file.exists()) {
+      return file;
+    } else {
+      var url = Uri.http(baseUrlHttp, '/file', {'uuid': fileUuid});
+      return http
+          .get(
+            url,
+            headers: {'Content-Type': 'application/octet-stream', 'Authorization': 'Bearer ${jwtNotifier.value}'},
+          )
+          .then((response) async {
+            if (response.statusCode == 200) {
+              return await file.writeAsBytes(response.bodyBytes);
+            } else {
+              return null;
+            }
+          });
+    }
   }
 
   static Future<int> updateUsername(String newUserName) async {

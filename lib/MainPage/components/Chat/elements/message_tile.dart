@@ -83,12 +83,12 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
       future: NetworkController.getFile(model.fileUuid),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          if (snapshot.data!.isEmpty) {
+          if (snapshot.data == null) {
             return Container();
           }
           switch (model.type) {
             case MessageType.image:
-              return Image(key: UniqueKey(), image: MemoryImage(snapshot.data!));
+              return Image(key: UniqueKey(), image: MemoryImage(snapshot.data!.readAsBytesSync()));
             case MessageType.video:
               return CustomVideoPlayer(key: UniqueKey(), data: snapshot.data);
             case MessageType.audio:
@@ -99,7 +99,7 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
               return Container();
           }
         } else {
-          return CircularProgressIndicator();
+          return Container();
         }
       },
     );
