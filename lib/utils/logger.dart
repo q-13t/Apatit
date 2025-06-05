@@ -17,6 +17,7 @@ class Logger {
     if (_clazz.length < _maxClazzName) {
       _clazz = ' ' * (_maxClazzName - _clazz.length) + _clazz;
     }
+    log("longest class name: $_maxClazzName");
     _clazz = clazz;
   }
 

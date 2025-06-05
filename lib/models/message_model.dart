@@ -70,16 +70,37 @@ class MessageModel {
     };
   }
 
-  MessageModel copyWith({required MessageStatus status}) {
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MessageModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          status == other.status &&
+          text == other.text; // etc
+
+  @override
+  int get hashCode => id.hashCode ^ status.hashCode ^ text.hashCode ^ timeStamp.hashCode;
+
+  MessageModel copyWith({
+    int? id,
+    int? sender,
+    String? text,
+    MessageStatus? status,
+    String? timeStamp,
+    MessageType? type,
+    String? fileUuid,
+    int? chatId,
+  }) {
     return MessageModel(
-      id: id,
-      sender: sender,
-      text: text,
-      status: status,
-      timeStamp: timeStamp,
-      type: type,
-      fileUuid: fileUuid,
-      chatId: chatId,
+      id: id ?? this.id,
+      sender: sender ?? this.sender,
+      text: text ?? this.text,
+      status: status ?? this.status,
+      timeStamp: timeStamp ?? this.timeStamp,
+      type: type ?? this.type,
+      fileUuid: fileUuid ?? this.fileUuid,
+      chatId: chatId ?? this.chatId,
     );
   }
 }

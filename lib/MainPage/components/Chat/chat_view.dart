@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -29,14 +30,14 @@ class ChatView extends StatefulWidget {
 
 class ChatViewState extends State<ChatView> {
   final _scrollController = ScrollController();
-  final ValueNotifier<List<MessageModel>> messages = ValueNotifier([]);
+  late ValueNotifier<List<ValueNotifier<MessageModel>>> _messagesNotifiers; // = ValueNotifier([]);
   static final List<User> _participants = [];
   String myInput = '';
   final _textController = TextEditingController();
   static List<User> get participants => _participants;
-
+  late StreamSubscription _subscription;
   File? _file;
-  late MessageModel _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
+  late MessageModel _mineCurrent;
 
   int offset = 0;
   int limit = 10;
@@ -45,7 +46,8 @@ class ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-
+    _messagesNotifiers = ValueNotifier([]);
+    _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
     NetworkController.getParticipants(widget.model.id).then((res) async {
       var json = jsonDecode(res);
       ChatView.logger.debug("Participants: $json");
@@ -61,7 +63,7 @@ class ChatViewState extends State<ChatView> {
           participants.add(User.fromJson(u));
         }
       }
-      NetworkController.messageStreamController.stream.listen((message) {
+      _subscription = NetworkController.messageStreamController.stream.listen((message) {
         var data = jsonDecode(message.toString());
         switch (WSMType.values.firstWhere((element) => element.name == data['type'], orElse: () => WSMType.def)) {
           case WSMType.loadMessages:
@@ -71,7 +73,8 @@ class ChatViewState extends State<ChatView> {
                     data['messages'].length,
                     (index) => MessageModel.fromJson(data['messages'][index]),
                   ).toList();
-              messages.value = messages.value + list;
+
+              _messagesNotifiers.value = _messagesNotifiers.value + list.map((value) => ValueNotifier(value)).toList();
               lastLoad = list.length;
               break;
             }
@@ -82,32 +85,35 @@ class ChatViewState extends State<ChatView> {
                     data['messages'].length,
                     (index) => MessageModel.fromJson(data['messages'][index]),
                   ).toList();
-              messages.value = messages.value + list;
+              // _messagesNotifiers.value = _messagesNotifiers.value + list.map((value) => ValueNotifier(value)).toList();
+              _messagesNotifiers.value.insertAll(0, list.map((value) => ValueNotifier(value)).toList());
               lastLoad = list.length;
+              _messagesNotifiers.notifyListeners();
               break;
             }
           case WSMType.newMessage:
             {
-              messages.value = [MessageModel.fromJson(data['data']), ...messages.value];
+              _messagesNotifiers.value.insert(0, ValueNotifier(MessageModel.fromJson(jsonDecode(data['data']))));
+              _messagesNotifiers.notifyListeners();
               break;
             }
           case WSMType.updateMessage:
             {
               var message = MessageModel.fromJson(jsonDecode(data['data']));
-              var tmp = messages.value;
-              var index = tmp.indexWhere((element) => element.id == message.id);
-              tmp[index] = message;
-              messages.value = tmp;
-              // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-              messages.notifyListeners();
+              var target = _messagesNotifiers.value.firstWhere((element) => element.value.id == message.id);
+              target.value = target.value.copyWith(status: message.status);
+
               break;
             }
           case WSMType.sendMessage:
             {
               var message = MessageModel.fromJson(jsonDecode(data['data']));
-              messages.value = [message, ...messages.value];
-              // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-              messages.notifyListeners();
+              _messagesNotifiers.value.insert(
+                0,
+                ValueNotifier(message),
+              ); // = [ValueNotifier(message), ..._messagesNotifiers.value];
+
+              _messagesNotifiers.notifyListeners();
               break;
             }
           case WSMType.error:
@@ -240,10 +246,14 @@ class ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
-    super.dispose();
-    // messages.dispose();
+    for (var element in _messagesNotifiers.value) {
+      element.dispose();
+    }
+    _messagesNotifiers.dispose();
+    _subscription.cancel();
     _textController.dispose();
     _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -260,34 +270,36 @@ class ChatViewState extends State<ChatView> {
           Expanded(
             child: Center(
               child: ValueListenableBuilder(
-                valueListenable: messages,
+                valueListenable: _messagesNotifiers,
                 builder: (context, value, child) {
                   if (value.isEmpty) {
                     return WowSoEmpty();
                   }
-                  ChatView.logger.debug("Messages: ${value[value.length - 1]}");
+                  // ChatView.logger.debug("Messages: ${value[value.length - 1]}");
                   return ListView.builder(
                     reverse: true,
                     controller: _scrollController,
                     itemCount: value.length,
                     itemBuilder: (context, index) {
-                      return VisibilityDetector(
-                        key: Key(value[index].id.toString()),
-                        onVisibilityChanged: (info) {
-                          ChatView.logger.debug(
-                            "Visible: ${info.visibleFraction}, status: ${value[index].status}, sender: ${value[index].sender}",
+                      return ValueListenableBuilder(
+                        valueListenable: value[index],
+                        builder: (context, value, child) {
+                          // ChatView.logger.debug("RENDERING: ${value.text}");
+                          return VisibilityDetector(
+                            key: Key(value.id.toString()),
+                            onVisibilityChanged: (info) {
+                              // ChatView.logger.debug("Visible: ${info.visibleFraction}, status: ${value.sender}");
+                              if (info.visibleFraction >= 0.5 &&
+                                  value.status == MessageStatus.delivered &&
+                                  value.sender != NetworkController.me.id) {
+                                // ChatView.logger.debug("Visible: ${value.text}");
+                                value = value.copyWith(status: MessageStatus.seen);
+                                NetworkController.websocketSend(value.toDynamic(), WSMType.updateMessage);
+                              }
+                            },
+                            child: MessageTile(message: value, key: ValueKey(value.id.toString())),
                           );
-                          if (info.visibleFraction >= 0.5 &&
-                              value[index].status == MessageStatus.delivered &&
-                              value[index].sender != NetworkController.me.id) {
-                            ChatView.logger.debug("Visible: ${value[index]}");
-                            var updated = value[index];
-                            updated.status = MessageStatus.seen;
-                            var dynamic = updated.toDynamic();
-                            NetworkController.websocketSend(dynamic, WSMType.updateMessage);
-                          }
                         },
-                        child: MessageTile(key: UniqueKey(), message: value[index]),
                       );
                     },
                   );
