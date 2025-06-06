@@ -48,7 +48,7 @@ public class JWTFilter extends OncePerRequestFilter {
         SECRET_KEY = secret;
     }
 
-    private Pattern excludedUrls = Pattern.compile("/user/login|/user/register|/actuator/.+|/$");
+    private Pattern excludedUrls = Pattern.compile("/ping|/user/login|/user/register|/actuator/.+|/$");
 
     private boolean shouldNotBeFiltered(@NonNull HttpServletRequest request) {
         Matcher matcher = excludedUrls.matcher(request.getRequestURI());
