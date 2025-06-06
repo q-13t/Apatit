@@ -6,9 +6,9 @@ import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  NetworkController.init();
+  // NetworkController();
   runApp(const MyApp());
 }
 
@@ -33,6 +33,11 @@ class Main extends State<MyApp> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Apatite',
@@ -46,20 +51,11 @@ class Main extends State<MyApp> {
             ToastService.init(context);
             log.debug("JWT: $value");
             if (value == null) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => {NetworkController.init()},
-                    child: Text("Retry", style: TextStyle(fontSize: 20)),
-                  ),
-                ],
-              );
-            } else {
-              return value.isEmpty ? AuthController() : MainPageController();
+              NetworkController();
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
             }
+
+            return value.isEmpty ? const AuthController() : const MainPageController();
           },
         ),
       ),
