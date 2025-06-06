@@ -97,12 +97,12 @@ class NetworkController {
         messageStreamController.sink.add(message);
       },
       onError: (error) async {
-        ToastService().showToast('Network error: $error');
+        ToastService.showToast('Network error: $error');
         await _prefs.setString('token', jwtNotifier.value ?? '');
         await setToken(null);
       },
       onDone: () async {
-        ToastService().showToast('No Connection To The Server');
+        ToastService.showToast('No Connection To The Server');
         await _prefs.setString('token', jwtNotifier.value ?? '');
         await setToken(null);
       },
@@ -136,7 +136,7 @@ class NetworkController {
       return http.Response('Error', 500);
     });
     if (response.statusCode != 200) {
-      ToastService().showToast(response.body);
+      ToastService.showToast(response.body);
       return false;
     }
     await setToken(jsonDecode(response.body)['token']);
@@ -153,7 +153,7 @@ class NetworkController {
       return http.Response('Error', 500);
     });
     if (response.statusCode != 200) {
-      ToastService().showToast(jsonDecode(response.body)['error']);
+      ToastService.showToast(jsonDecode(response.body)['error']);
       return false;
     }
     await setToken(jsonDecode(response.body)['token']);
@@ -165,7 +165,7 @@ class NetworkController {
 
   static void websocketSend(Map<String, dynamic> message, WSMType type) async {
     if (jwtNotifier.value == null || jwtNotifier.value == '') {
-      ToastService().showToast('WebSocket not initialized');
+      ToastService.showToast('WebSocket not initialized');
       setToken(null);
       return;
     }
@@ -179,7 +179,7 @@ class NetworkController {
     var response = await http.get(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'});
     _logger.debug("Get me response: ${response.body}");
     if (response.statusCode == 401) {
-      ToastService().showToast('Unauthorized');
+      ToastService.showToast('Unauthorized');
       final secureStorage = FlutterSecureStorage();
       NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     }
@@ -209,7 +209,7 @@ class NetworkController {
     var response = await request.send();
     _logger.debug("Upload file response: ${response.statusCode}");
     if (response.statusCode == 401) {
-      ToastService().showToast('Unauthorized');
+      ToastService.showToast('Unauthorized');
       final secureStorage = FlutterSecureStorage();
       NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     }
@@ -251,7 +251,7 @@ class NetworkController {
         .onError((error, stackTrace) => http.Response('Error', 500));
     _logger.debug("updateUsername response: ${response.statusCode} - reason: ${response.body}");
     if (response.statusCode == 401) {
-      ToastService().showToast('Unauthorized');
+      ToastService.showToast('Unauthorized');
       final secureStorage = FlutterSecureStorage();
       NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     } else if (response.statusCode == 200) {
@@ -274,7 +274,7 @@ class NetworkController {
         .onError((error, stackTrace) => http.Response('Error', 500));
     _logger.debug("updatePassword response: ${response.statusCode} - reason: ${response.body}");
     if (response.statusCode == 401) {
-      ToastService().showToast('Unauthorized');
+      ToastService.showToast('Unauthorized');
       final secureStorage = FlutterSecureStorage();
       NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     } else if (response.statusCode == 200) {
@@ -295,7 +295,7 @@ class NetworkController {
         )
         .onError((error, stackTrace) => http.Response('Error', 500));
     if (response.statusCode == 401) {
-      ToastService().showToast('Unauthorized');
+      ToastService.showToast('Unauthorized');
       final secureStorage = FlutterSecureStorage();
       NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     } else if (response.statusCode == 200) {

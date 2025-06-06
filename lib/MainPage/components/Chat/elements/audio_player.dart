@@ -51,14 +51,22 @@ class _CustomAudioPlayerState extends State<CustomAudioPlayer> with AutomaticKee
   }
 
   Future<void> _initAudio(File file) async {
-    try {
-      await _player.setFilePath(file.path);
-      setState(() {
-        _isInitialized = true;
-      });
-    } catch (e) {
-      ToastService().showToast("Cannot Play Audio");
-    }
+    _player
+        .setFilePath(file.path)
+        .catchError((e) {
+          ToastService.showToast("Cannot Play Audio");
+        })
+        .then(
+          (file) => setState(() {
+            _isInitialized = true;
+          }),
+        )
+        .catchError((e) {
+          ToastService.showToast("Cannot Play Audio");
+        });
+    // setState(() {
+    //   _isInitialized = true;
+    // });
   }
 
   void _togglePlayPause() {

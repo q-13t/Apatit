@@ -12,30 +12,34 @@ class Logger {
   Logger(String? clazz) {
     // If clazz is null, Name Will be Unknown
     if (clazz == null) return;
-    _maxClazzName = (_clazz.length > _maxClazzName) ? _clazz.length : _maxClazzName;
-    // LeftPad with spaces
-    if (_clazz.length < _maxClazzName) {
-      _clazz = ' ' * (_maxClazzName - _clazz.length) + _clazz;
-    }
-    log("longest class name: $_maxClazzName");
+    _maxClazzName = clazz.length > _maxClazzName ? clazz.length : _maxClazzName;
     _clazz = clazz;
   }
 
   void debug(String message) {
     if (_level >= 2) {
-      log('${DateTime.now()} - DEBUG - [$_clazz]: $message');
+      if (_clazz.length < _maxClazzName) {
+        _clazz = _clazz.padLeft(_maxClazzName);
+      }
+      log('${DateTime.now()} - DEBUG - [$_clazz]:\n $message');
     }
   }
 
   void info(String message) {
     if (_level >= 1) {
-      log('${DateTime.now()} - INFO  - [$_clazz]: $message');
+      if (_clazz.length < _maxClazzName) {
+        _clazz = _clazz.padLeft(_maxClazzName);
+      }
+      log('${DateTime.now()} - INFO  - [$_clazz]:\n $message');
     }
   }
 
   void err(String message) {
     if (_level >= 0) {
-      log('${DateTime.now()} - ERROR - [$_clazz]: $message');
+      if (_clazz.length < _maxClazzName) {
+        _clazz = _clazz.padLeft(_maxClazzName);
+      }
+      log('${DateTime.now()} - ERROR - [$_clazz]:\n $message');
     }
   }
 }

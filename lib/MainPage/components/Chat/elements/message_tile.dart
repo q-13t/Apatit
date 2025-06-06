@@ -23,6 +23,7 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
 
   @override
   Widget build(BuildContext context) {
+    MessageTile.logger.info("Building message tile ${widget.message.text}");
     super.build(context);
     return Align(
       alignment: (widget.message.sender == NetworkController.me.id) ? Alignment.centerRight : Alignment.centerLeft,

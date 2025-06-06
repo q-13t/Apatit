@@ -103,13 +103,12 @@ class ChatViewState extends State<ChatView> {
             }
           case WSMType.sendMessage:
             {
-              var message = MessageModel.fromJson(jsonDecode(data['data']));
-              _messagesNotifiers.value.insert(0, ValueNotifier(message));
+              _messagesNotifiers.value.insert(0, ValueNotifier(MessageModel.fromJson(jsonDecode(data['data']))));
               break;
             }
           case WSMType.error:
             {
-              ToastService().showToast(data['message']);
+              ToastService.showToast(data['message']);
               break;
             }
           case WSMType.def:

@@ -15,7 +15,7 @@ class CustomVideoPlayer extends StatefulWidget {
 }
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKeepAliveClientMixin {
-  VideoPlayerController? _controller;
+  late VideoPlayerController _controller;
 
   bool _showControls = true;
   Timer? _hideTimer;
@@ -29,25 +29,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
   }
 
   Future<void> _initializeVideo(File file) async {
-    try {
-      _controller = VideoPlayerController.file(file);
-      await _controller!.initialize();
-      setState(() {});
-    } catch (e) {
-      ToastService().showToast("Cannot Play Video");
-    }
+    _controller = VideoPlayerController.file(file);
+    _controller
+        .initialize()
+        .catchError((e) {
+          ToastService.showToast("Cannot Play Video");
+        })
+        .then((file) => setState(() {}))
+        .catchError((e) {
+          ToastService.showToast("Cannot Play Video");
+        });
   }
 
   void _togglePlayPause() {
-    if (_controller == null) return;
-
     setState(() {
-      if (_controller!.value.isPlaying) {
-        _controller!.pause();
+      if (_controller.value.isPlaying) {
+        _controller.pause();
         _showControls = true;
         _hideTimer?.cancel();
       } else {
-        _controller!.play();
+        _controller.play();
         _startHideTimer();
       }
     });
@@ -56,7 +57,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
   void _startHideTimer() {
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(seconds: 3), () {
-      if (_controller!.value.isPlaying) {
+      if (_controller.value.isPlaying) {
         setState(() {
           _showControls = false;
         });
@@ -65,11 +66,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
   }
 
   void _onTapVideo() {
-    if (_controller == null) return;
-
     setState(() {
       _showControls = !_showControls;
-      if (_controller!.value.isPlaying && _showControls) {
+      if (_controller.value.isPlaying && _showControls) {
         _startHideTimer();
       }
     });
@@ -77,7 +76,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _controller.dispose();
     _hideTimer?.cancel();
     super.dispose();
   }
@@ -85,20 +84,20 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return _controller != null && _controller!.value.isInitialized
+    return _controller.value.isInitialized
         ? GestureDetector(
           onTap: _onTapVideo,
           child: Stack(
             alignment: Alignment.center,
             children: [
-              AspectRatio(aspectRatio: _controller!.value.aspectRatio, child: VideoPlayer(_controller!)),
+              AspectRatio(aspectRatio: _controller.value.aspectRatio, child: VideoPlayer(_controller)),
               if (_showControls)
                 Container(
                   color: Colors.black45,
                   child: IconButton(
                     iconSize: 60,
                     icon: Icon(
-                      _controller!.value.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                      _controller.value.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
                       color: Colors.white,
                     ),
                     onPressed: _togglePlayPause,
@@ -109,7 +108,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
                 left: 0,
                 right: 0,
                 child: VideoProgressIndicator(
-                  _controller!,
+                  _controller,
                   allowScrubbing: true,
                   colors: VideoProgressColors(
                     playedColor: Colors.cyan,

@@ -31,23 +31,23 @@ class _SettingsPageState extends State<SettingsPage> {
     if (_newUserName != '' && _newUserName != NetworkController.me.username) {
       NetworkController.updateUsername(_newUserName).then((status) {
         if (status == 200) {
-          ToastService().showToast('Username updated');
+          ToastService.showToast('Username updated');
         } else {
-          ToastService().showToast('Something went wrong');
+          ToastService.showToast('Something went wrong');
         }
       });
     }
 
     if (_newPassword.isNotEmpty || _newPassword.isNotEmpty) {
       if (_oldPassword != _newPassword) {
-        ToastService().showToast('New password must be different from the old one');
+        ToastService.showToast('New password must be different from the old one');
         return;
       }
       NetworkController.updatePassword(_newPassword, _oldPassword).then((status) {
         if (status == 200) {
-          ToastService().showToast('Password updated');
+          ToastService.showToast('Password updated');
         } else {
-          ToastService().showToast('Something went wrong');
+          ToastService.showToast('Something went wrong');
         }
       });
     }
@@ -58,13 +58,13 @@ class _SettingsPageState extends State<SettingsPage> {
         if (code == 200) {
           NetworkController.updatePFP(newFileName, _newPfp).then((status) {
             if (status == 200) {
-              ToastService().showToast('Profile picture updated');
+              ToastService.showToast('Profile picture updated');
               NetworkController.me.pfp = _newPfp!.readAsBytesSync();
               NetworkController.me.pfpUuid = newFileName;
               _newPfp = null;
               newUUID = Main.getUuid();
             } else {
-              ToastService().showToast('Something went wrong');
+              ToastService.showToast('Something went wrong');
             }
           });
         }

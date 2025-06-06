@@ -9,14 +9,14 @@ class ToastService {
 
   ToastService._internal();
 
-  void init(BuildContext context) {
+  static void init(BuildContext context) {
     _logger = Logger("ToastServices");
     _context = context;
   }
 
-  BuildContext? _context;
+  static BuildContext? _context;
 
-  void showToast(String message) {
+  static void showToast(String message) {
     _logger.info("Toast: $message");
     if (_context != null) {
       toastification.show(

@@ -43,7 +43,7 @@ class Main extends State<MyApp> {
         child: ValueListenableBuilder(
           valueListenable: NetworkController.jwtNotifier,
           builder: (context, value, child) {
-            ToastService().init(context);
+            ToastService.init(context);
             log.debug("JWT: $value");
             if (value == null) {
               return Column(

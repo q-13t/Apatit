@@ -50,7 +50,7 @@ class _NewChatControllerState extends State<NewChatController> {
       if (data['type'] == WSMTWrapper[WSMType.newChatPrivate]) {
         _logger.debug("Got new chat: ${data['chat_id']}");
         if (data['chat_id'] == null || data['id'] == -1) {
-          ToastService().showToast('Chat not created');
+          ToastService.showToast('Chat not created');
         } else {
           MainPageControllerState.chatData = ChatTileModel(id: data['chat_id'], name: data['name']);
           MainPageControllerState.currentPage.value = Pages.chat;
