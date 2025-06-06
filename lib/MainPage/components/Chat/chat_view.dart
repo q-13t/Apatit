@@ -85,16 +85,13 @@ class ChatViewState extends State<ChatView> {
                     data['messages'].length,
                     (index) => MessageModel.fromJson(data['messages'][index]),
                   ).toList();
-              // _messagesNotifiers.value = _messagesNotifiers.value + list.map((value) => ValueNotifier(value)).toList();
               _messagesNotifiers.value.insertAll(0, list.map((value) => ValueNotifier(value)).toList());
               lastLoad = list.length;
-              _messagesNotifiers.notifyListeners();
               break;
             }
           case WSMType.newMessage:
             {
               _messagesNotifiers.value.insert(0, ValueNotifier(MessageModel.fromJson(jsonDecode(data['data']))));
-              _messagesNotifiers.notifyListeners();
               break;
             }
           case WSMType.updateMessage:
@@ -102,18 +99,12 @@ class ChatViewState extends State<ChatView> {
               var message = MessageModel.fromJson(jsonDecode(data['data']));
               var target = _messagesNotifiers.value.firstWhere((element) => element.value.id == message.id);
               target.value = target.value.copyWith(status: message.status);
-
               break;
             }
           case WSMType.sendMessage:
             {
               var message = MessageModel.fromJson(jsonDecode(data['data']));
-              _messagesNotifiers.value.insert(
-                0,
-                ValueNotifier(message),
-              ); // = [ValueNotifier(message), ..._messagesNotifiers.value];
-
-              _messagesNotifiers.notifyListeners();
+              _messagesNotifiers.value.insert(0, ValueNotifier(message));
               break;
             }
           case WSMType.error:
@@ -196,7 +187,7 @@ class ChatViewState extends State<ChatView> {
 
   void pickFile() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false);
+      FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false, compressionQuality: 30);
       if (result == null) {
         return;
       }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:video_player/video_player.dart';
@@ -28,9 +29,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
   }
 
   Future<void> _initializeVideo(File file) async {
-    _controller = VideoPlayerController.file(file);
-    await _controller!.initialize();
-    setState(() {});
+    try {
+      _controller = VideoPlayerController.file(file);
+      await _controller!.initialize();
+      setState(() {});
+    } catch (e) {
+      ToastService().showToast("Cannot Play Video");
+    }
   }
 
   void _togglePlayPause() {
