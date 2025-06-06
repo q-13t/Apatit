@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -87,11 +89,13 @@ class ChatViewState extends State<ChatView> {
                   ).toList();
               _messagesNotifiers.value.insertAll(0, list.map((value) => ValueNotifier(value)).toList());
               lastLoad = list.length;
+              _messagesNotifiers.notifyListeners();
               break;
             }
           case WSMType.newMessage:
             {
               _messagesNotifiers.value.insert(0, ValueNotifier(MessageModel.fromJson(jsonDecode(data['data']))));
+              _messagesNotifiers.notifyListeners();
               break;
             }
           case WSMType.updateMessage:
@@ -104,6 +108,7 @@ class ChatViewState extends State<ChatView> {
           case WSMType.sendMessage:
             {
               _messagesNotifiers.value.insert(0, ValueNotifier(MessageModel.fromJson(jsonDecode(data['data']))));
+              _messagesNotifiers.notifyListeners();
               break;
             }
           case WSMType.error:

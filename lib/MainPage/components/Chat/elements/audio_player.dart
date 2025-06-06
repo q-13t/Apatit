@@ -55,6 +55,7 @@ class _CustomAudioPlayerState extends State<CustomAudioPlayer> with AutomaticKee
         .setFilePath(file.path)
         .catchError((e) {
           ToastService.showToast("Cannot Play Audio");
+          return Duration(seconds: 0);
         })
         .then(
           (file) => setState(() {

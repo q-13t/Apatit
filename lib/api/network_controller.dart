@@ -27,12 +27,10 @@ class NetworkController {
   static final Map<String, Uint8List?> _pfpCache = {};
   static late SharedPreferences _prefs;
   static late Logger _logger;
-  static late Directory tempDir; // = await getTemporaryDirectory();
+  static late Directory tempDir;
 
   static User _me = User(-1, "", "");
-
   static User get me => _me;
-
   static Uint8List? getCachedPFP(String username) => _pfpCache[username];
 
   static void setCachedPFP(String username, Uint8List? bytes) {
@@ -41,53 +39,73 @@ class NetworkController {
 
   static bool jwtIsEmpty() => jwtNotifier.value == null || jwtNotifier.value == '';
 
-  static Future<void> init() async {
-    _logger = Logger("NetworkController");
-    _logger.debug("Initializing Network Controller");
-    tempDir = await getTemporaryDirectory();
-    _prefs = await SharedPreferences.getInstance();
-    final token = _prefs.getString('token');
-    if (token != null && token != '') {
-      bool valid = await NetworkController.askValidation(token);
-      if (valid) {
-        await NetworkController.setToken(token);
-      } else {
-        NetworkController.setToken('');
+  Future<void> init() async {
+    const delay = Duration(seconds: 1);
+    while (true) {
+      if (await ping()) {
+        _logger.debug("Initializing Network Controller");
+        tempDir = await getTemporaryDirectory();
+        _prefs = await SharedPreferences.getInstance();
+        final token = _prefs.getString('token');
+        if (token != null && token != '' && token.isNotEmpty) {
+          bool valid = await askValidation(token);
+          if (valid) {
+            await setToken(token);
+          } else {
+            ToastService.showToast('Invalid Token');
+            await setToken('');
+          }
+        } else {
+          ToastService.showToast('Invalid Token');
+          await setToken('');
+        }
+        break;
       }
+      await Future.delayed(delay);
+    }
+  }
+
+  static Future<bool> ping() async {
+    _logger.debug("Pinging server");
+    final response = await http
+        .get(Uri.http(baseUrlHttp, '/ping'))
+        .timeout(Duration(seconds: 30), onTimeout: () => http.Response("Unreachable", 523));
+    if (response.statusCode != 523) {
+      _logger.info("Pinged server");
+      return true;
     } else {
-      NetworkController.setToken('');
+      _logger.info("Failed to ping server");
+      return false;
     }
   }
 
   factory NetworkController() {
     if (!_initialized) {
       _instance = NetworkController._();
-      NetworkController.init().then((value) => _initialized = true);
+      _logger = Logger("NetworkController");
+      _instance.init();
+      _initialized = true;
+    } else if (token == null || token == '') {
+      _instance.init();
     }
     return _instance;
   }
 
   static Future<void> setToken(String? token) async {
-    if (token != null) {
-      await _prefs.setString('token', token);
-    }
     jwtNotifier.value = token;
-    if (jwtIsEmpty()) {
-      try {
-        _channel!.sink.close();
-      } catch (e) {
-        _logger.err(e.toString());
-      }
+    if (token != null && token.isNotEmpty) {
+      _prefs.setString('token', token);
+      initWebSocket();
+      _getMe(token).then((meResp) {
+        _me = User.fromJson(jsonDecode(meResp));
+        websocketSend({"id": _me.id}, WSMType.bind);
+        getFile(_me.pfpUuid).then((value) => _me.pfp = value?.readAsBytesSync());
+      });
+    } else {
+      // _prefs.remove('token');
+      _channel?.sink.close();
       _channel = null;
-      return;
     }
-    if (token == null) return;
-    initWebSocket();
-    _getMe(token).then((meResp) {
-      _me = User.fromJson(jsonDecode(meResp));
-      websocketSend({"id": _me.id}, WSMType.bind);
-      getFile(_me.pfpUuid).then((value) => _me.pfp = value?.readAsBytesSync());
-    });
   }
 
   static void initWebSocket() {
@@ -190,7 +208,11 @@ class NetworkController {
     var url = Uri.http(baseUrlHttp, '/user/validateToken');
     var response = await http
         .post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'})
-        .onError((error, stackTrace) => http.Response('Error', 500));
+        .timeout(Duration(seconds: 50))
+        .onError((error, stackTrace) {
+          setToken(null);
+          return http.Response('Error', 500);
+        });
     _logger.debug("Validation response: ${response.statusCode} - reason: ${response.body}");
     return response.statusCode == 200;
   }
