@@ -5,8 +5,9 @@ import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/main.dart';
 import 'package:Apatite/utils/logger.dart' show Logger;
 import 'package:Apatite/utils/toast_service.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 
 class SettingsPage extends StatefulWidget {
@@ -52,12 +53,16 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     if (_newPfp != null) {
-      NetworkController.uploadFile(_newPfp!.readAsBytesSync(), newUUID + p.extension(_newPfp!.path)).then((code) {
+      var newFileName = newUUID + p.extension(_newPfp!.path);
+      NetworkController.uploadFile(_newPfp!.readAsBytesSync(), newFileName).then((code) {
         if (code == 200) {
-          NetworkController.updatePFP(newUUID + p.extension(_newPfp!.path), _newPfp).then((status) {
+          NetworkController.updatePFP(newFileName, _newPfp).then((status) {
             if (status == 200) {
               ToastService().showToast('Profile picture updated');
+              NetworkController.me.pfp = _newPfp!.readAsBytesSync();
+              NetworkController.me.pfpUuid = newFileName;
               _newPfp = null;
+              newUUID = Main.getUuid();
             } else {
               ToastService().showToast('Something went wrong');
             }
@@ -103,11 +108,34 @@ class _SettingsPageState extends State<SettingsPage> {
             width: MediaQuery.of(context).size.width,
             child: GestureDetector(
               onTap: () async {
-                FilePickerResult? pickedFile = await FilePicker.platform.pickFiles(allowMultiple: false);
+                final picker = ImagePicker();
+                final pickedFile = await picker.pickImage(
+                  source: ImageSource.gallery,
+                  preferredCameraDevice: CameraDevice.front,
+                );
                 if (pickedFile == null) {
                   return;
                 }
-                _newPfp = File(pickedFile.files.single.path!);
+                final cropper = ImageCropper();
+
+                final cropped = await cropper.cropImage(
+                  compressFormat: ImageCompressFormat.jpg,
+                  compressQuality: 40,
+                  aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+                  uiSettings: [
+                    AndroidUiSettings(
+                      toolbarTitle: 'Crop Image',
+                      backgroundColor: Color.fromARGB(169, 68, 68, 68),
+                      toolbarWidgetColor: Colors.white,
+                      cropStyle: CropStyle.circle,
+                      initAspectRatio: CropAspectRatioPreset.original,
+                      lockAspectRatio: false,
+                    ),
+                  ],
+                  sourcePath: pickedFile.path,
+                );
+
+                _newPfp = File(cropped!.path);
                 setState(() {});
               },
               child: buildImage(),

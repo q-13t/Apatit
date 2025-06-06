@@ -44,11 +44,15 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
                   child:
                       (ChatViewState.participants.firstWhere((element) => element.id == widget.message.sender).pfp !=
                               null)
-                          ? Image.memory(
-                            ChatViewState.participants
-                                .firstWhere((element) => element.id == widget.message.sender)
-                                .pfp!,
+                          ? ClipRRect(
+                            borderRadius: BorderRadius.circular(100),
+                            child: Image.memory(
+                              ChatViewState.participants
+                                  .firstWhere((element) => element.id == widget.message.sender)
+                                  .pfp!,
+                            ),
                           )
+                          // ? Image.memory(ChatViewState.participants.firstWhere((element) => element.id == widget.message.sender).pfp!)
                           : Icon(Icons.person),
                 ),
                 const SizedBox(width: 10),

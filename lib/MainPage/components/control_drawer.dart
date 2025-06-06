@@ -25,10 +25,13 @@ class _ControlDrawerState extends State<ControlDrawer> {
                   decoration: BoxDecoration(
                     image:
                         NetworkController.me.pfp != null
-                            ? DecorationImage(image: MemoryImage(NetworkController.me.pfp!))
+                            ? DecorationImage(image: MemoryImage(NetworkController.me.pfp!), fit: BoxFit.fitWidth)
                             : null,
                   ),
-                  child: Text(NetworkController.me.username, style: const TextStyle(fontSize: 24)),
+                  child: Text(
+                    NetworkController.me.username,
+                    style: const TextStyle(fontSize: 24, color: Color.fromARGB(255, 0, 0, 0)),
+                  ),
                 ),
               ),
             ],

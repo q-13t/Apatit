@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:just_audio/just_audio.dart';
@@ -50,10 +51,14 @@ class _CustomAudioPlayerState extends State<CustomAudioPlayer> with AutomaticKee
   }
 
   Future<void> _initAudio(File file) async {
-    await _player.setFilePath(file.path);
-    setState(() {
-      _isInitialized = true;
-    });
+    try {
+      await _player.setFilePath(file.path);
+      setState(() {
+        _isInitialized = true;
+      });
+    } catch (e) {
+      ToastService().showToast("Cannot Play Audio");
+    }
   }
 
   void _togglePlayPause() {
