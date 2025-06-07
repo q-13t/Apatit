@@ -27,6 +27,19 @@ class _SettingsPageState extends State<SettingsPage> {
   Uint8List? _oldPfp = NetworkController.me.pfp;
   String newUUID = Main.getUuid();
 
+  final picker = ImagePicker();
+  final cropper = ImageCropper();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   void updateUserData() {
     if (_newUserName != '' && _newUserName != NetworkController.me.username) {
       NetworkController.updateUsername(_newUserName).then((status) {
@@ -97,95 +110,107 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  clearCache() {
+    NetworkController.tempDir
+        .delete(recursive: true)
+        .then((value) => ToastService.showToast('Cache cleared'))
+        .catchError((e) {
+          ToastService.showToast(e.toString());
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: Column(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.2,
-            width: MediaQuery.of(context).size.width,
-            child: GestureDetector(
-              onTap: () async {
-                final picker = ImagePicker();
-                final pickedFile = await picker.pickImage(
-                  source: ImageSource.gallery,
-                  preferredCameraDevice: CameraDevice.front,
-                );
-                if (pickedFile == null) {
-                  return;
-                }
-                final cropper = ImageCropper();
+    return Column(
+      children: [
+        Expanded(
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.2,
+                    width: MediaQuery.of(context).size.width,
+                    child: GestureDetector(
+                      onTap: () async {
+                        final pickedFile = await picker.pickImage(
+                          source: ImageSource.gallery,
+                          preferredCameraDevice: CameraDevice.front,
+                        );
+                        if (pickedFile == null) {
+                          return;
+                        }
 
-                final cropped = await cropper.cropImage(
-                  compressFormat: ImageCompressFormat.jpg,
-                  compressQuality: 40,
-                  aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-                  uiSettings: [
-                    AndroidUiSettings(
-                      toolbarTitle: 'Crop Image',
-                      backgroundColor: Color.fromARGB(169, 68, 68, 68),
-                      toolbarWidgetColor: Colors.white,
-                      cropStyle: CropStyle.circle,
-                      initAspectRatio: CropAspectRatioPreset.original,
-                      lockAspectRatio: false,
+                        final cropped = await cropper.cropImage(
+                          compressFormat: ImageCompressFormat.jpg,
+                          compressQuality: 40,
+                          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+                          uiSettings: [
+                            AndroidUiSettings(
+                              toolbarTitle: 'Crop Image',
+                              backgroundColor: Color.fromARGB(169, 68, 68, 68),
+                              toolbarWidgetColor: Colors.white,
+                              cropStyle: CropStyle.circle,
+                              initAspectRatio: CropAspectRatioPreset.original,
+                              lockAspectRatio: false,
+                            ),
+                          ],
+                          sourcePath: pickedFile.path,
+                        );
+
+                        _newPfp = File(cropped!.path);
+                        setState(() {});
+                      },
+                      child: buildImage(),
                     ),
-                  ],
-                  sourcePath: pickedFile.path,
-                );
-
-                _newPfp = File(cropped!.path);
-                setState(() {});
-              },
-              child: buildImage(),
+                  ),
+                  TextField(
+                    decoration: InputDecoration(hintText: 'Enter Username', border: OutlineInputBorder()),
+                    onChanged: (value) => {_newUserName = value},
+                  ),
+                  TextField(
+                    decoration: InputDecoration(hintText: 'Enter New Password', border: OutlineInputBorder()),
+                    onChanged: (value) => {_newPassword = value},
+                  ),
+                  TextField(
+                    decoration: InputDecoration(hintText: 'Enter Old Password', border: OutlineInputBorder()),
+                    onChanged: (value) => {_oldPassword = value},
+                  ),
+                ],
+              ),
             ),
           ),
-          SizedBox(height: 15),
-          TextField(
-            decoration: InputDecoration(hintText: 'Enter Username', border: OutlineInputBorder()),
-            onChanged: (value) => {_newUserName = value},
-          ),
-          TextField(
-            decoration: InputDecoration(hintText: 'Enter New Password', border: OutlineInputBorder()),
-            onChanged: (value) => {_newPassword = value},
-          ),
-          TextField(
-            decoration: InputDecoration(hintText: 'Enter Old Password', border: OutlineInputBorder()),
-            onChanged: (value) => {_oldPassword = value},
-          ),
-          Spacer(),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => {},
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.all(Colors.redAccent[200]),
-                    iconColor: WidgetStateProperty.all(Colors.black),
-                    shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                  ),
-                  child: Icon(Icons.delete_forever),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => {clearCache()},
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Colors.redAccent[200]),
+                  iconColor: WidgetStateProperty.all(Colors.black),
+                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                 ),
+                child: Column(children: [Icon(Icons.delete_forever), Text('Clear Cache')]),
               ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => {updateUserData()},
-                  style: ButtonStyle(
-                    shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                    minimumSize: WidgetStateProperty.all(Size(60, 60)),
-                  ),
-                  child: Icon(Icons.save, size: 40),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => {updateUserData()},
+                style: ButtonStyle(
+                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  minimumSize: WidgetStateProperty.all(Size(60, 60)),
                 ),
+                child: Icon(Icons.save, size: 40),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
