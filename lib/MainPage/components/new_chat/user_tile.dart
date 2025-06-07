@@ -1,15 +1,15 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/models/user_tile_model.dart';
-import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
 import 'package:flutter/material.dart';
 
 class UserTile extends StatefulWidget {
   final UserTileModel model;
-  const UserTile({super.key, required this.model});
+  UserTile({super.key, required this.model});
+  // ignore: unused_field
+  final Logger _logger = Logger("UserTile");
 
   @override
   State<UserTile> createState() => _UserTileState();
@@ -17,30 +17,10 @@ class UserTile extends StatefulWidget {
 
 class _UserTileState extends State<UserTile> {
   ValueNotifier<Uint8List?> pfpNotifier = ValueNotifier<Uint8List?>(null);
-  // ignore: unused_field
-  static late Logger _logger;
 
   @override
   void initState() {
     super.initState();
-    _logger = Logger("UserTile");
-    final cached = NetworkController.getCachedPFP(widget.model.username);
-
-    if (cached == null) {
-      NetworkController.messageStreamController.stream.listen((message) {
-        var data = jsonDecode(message.toString());
-        if (data['type'] == WSMTWrapper[WSMType.getPFP] && data['username'] == widget.model.username) {
-          // _logger.debug("Got PFP: ${data['bytes']}");
-          var str = data['bytes'].toString();
-          var bytes = (str == "null") ? Uint8List(0) : base64Decode(str);
-          NetworkController.setCachedPFP(widget.model.username, bytes);
-          pfpNotifier.value = bytes;
-        }
-      });
-      NetworkController.websocketSend({'username': widget.model.username}, WSMType.getPFP);
-    } else {
-      pfpNotifier.value = cached;
-    }
   }
 
   @override
@@ -52,17 +32,16 @@ class _UserTileState extends State<UserTile> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        ValueListenableBuilder(
-          valueListenable: pfpNotifier,
-          builder: (context, value, child) {
-            if (value == null) {
-              return CircularProgressIndicator();
-            } else if (value.isEmpty) {
-              return CircleAvatar(child: Icon(Icons.person));
-            } else {
+        FutureBuilder(
+          future: NetworkController.getFile(widget.model.pfp_uuid),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              Uint8List? data = snapshot.data?.readAsBytesSync();
               return CircleAvatar(
-                child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.memory(value)),
+                child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.memory(data!)),
               );
+            } else {
+              return CircleAvatar(child: Icon(Icons.person));
             }
           },
         ),
