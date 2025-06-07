@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/audio_player.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/video_player.dart';
@@ -23,8 +25,9 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
 
   @override
   Widget build(BuildContext context) {
-    MessageTile.logger.info("Building message tile ${widget.message.text}");
     super.build(context);
+    MessageTile.logger.info("Building message tile ${widget.message.text}");
+
     return Align(
       alignment: (widget.message.sender == NetworkController.me.id) ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -37,42 +40,36 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               children: [
                 CircleAvatar(
                   child:
-                      (ChatViewState.participants.firstWhere((element) => element.id == widget.message.sender).pfp !=
-                              null)
+                      (ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).pfp != null)
                           ? ClipRRect(
                             borderRadius: BorderRadius.circular(100),
                             child: Image.memory(
-                              ChatViewState.participants
-                                  .firstWhere((element) => element.id == widget.message.sender)
-                                  .pfp!,
+                              ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).pfp!,
+                              // Give this a stable key based on fileUuid or message.id
+                              key: ValueKey<String>(widget.message.fileUuid ?? 'no-file-${widget.message.id}'),
                             ),
                           )
-                          // ? Image.memory(ChatViewState.participants.firstWhere((element) => element.id == widget.message.sender).pfp!)
-                          : Icon(Icons.person),
+                          : const Icon(Icons.person),
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  ChatViewState.participants.firstWhere((element) => element.id == widget.message.sender).username,
-                  style: TextStyle(fontSize: 20),
+                  ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).username,
+                  style: const TextStyle(fontSize: 20),
                 ),
               ],
             ),
-            Padding(
-              padding: EdgeInsets.all(5),
-              child: Container(height: 2, width: double.infinity, color: Colors.cyan[500]),
-            ),
+            const SizedBox(height: 5),
             buildMedia(context, widget.message),
-            Text(widget.message.text ?? "", style: TextStyle(fontSize: 20), textAlign: TextAlign.start),
+            Text(widget.message.text ?? "", style: const TextStyle(fontSize: 20)),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(widget.message.timeStamp ?? "", style: TextStyle(fontSize: 15)),
+                Text(widget.message.timeStamp ?? "", style: const TextStyle(fontSize: 15)),
                 const Spacer(),
                 getIcon(context, widget.message.status ?? MessageStatus.sent),
               ],
@@ -84,40 +81,41 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
   }
 
   Widget buildMedia(BuildContext context, MessageModel model) {
-    return FutureBuilder(
+    return FutureBuilder<File?>(
       future: NetworkController.getFile(model.fileUuid),
       builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          if (snapshot.data == null) {
-            return Container();
-          }
-          switch (model.type) {
-            case MessageType.image:
-              return Image(key: UniqueKey(), image: MemoryImage(snapshot.data!.readAsBytesSync()));
-            case MessageType.video:
-              return CustomVideoPlayer(key: UniqueKey(), data: snapshot.data);
-            case MessageType.audio:
-              return CustomAudioPlayer(key: UniqueKey(), data: snapshot.data);
-            case MessageType.file:
-              return Placeholder();
-            default:
-              return Container();
-          }
-        } else {
-          return Container();
+        if (!snapshot.hasData || snapshot.data == null) {
+          return const SizedBox.shrink();
+        }
+        final file = snapshot.data!;
+        switch (model.type) {
+          case MessageType.image:
+            return Image(key: ValueKey<String>(model.fileUuid!), image: MemoryImage(file.readAsBytesSync()));
+          case MessageType.video:
+            return CustomVideoPlayer(key: ValueKey<String>(model.fileUuid!), data: file);
+          case MessageType.audio:
+            return CustomAudioPlayer(key: ValueKey<String>(model.fileUuid!), data: file);
+          case MessageType.file:
+            return const Placeholder();
+          case null:
+            // TODO: Handle this case.
+            throw UnimplementedError();
+          case MessageType.text:
+            // TODO: Handle this case.
+            throw UnimplementedError();
         }
       },
     );
   }
 
-  getIcon(BuildContext context, MessageStatus type) {
-    switch (type) {
+  Widget getIcon(BuildContext context, MessageStatus status) {
+    switch (status) {
       case MessageStatus.delivered:
-        return Icon(Icons.done_outline_rounded, size: 15);
+        return const Icon(Icons.done_outline_rounded, size: 15);
       case MessageStatus.seen:
-        return Icon(Icons.done_all, size: 15);
+        return const Icon(Icons.done_all, size: 15);
       case MessageStatus.sent:
-        return Icon(Icons.done, size: 15);
+        return const Icon(Icons.done, size: 15);
     }
   }
 }

@@ -21,9 +21,9 @@ import 'package:visibility_detector/visibility_detector.dart';
 
 class ChatView extends StatefulWidget {
   final Function changePage;
-
   final ChatTileModel model;
   static final Logger logger = Logger("ChatView");
+
   const ChatView({super.key, required this.changePage, required this.model});
 
   @override
@@ -32,11 +32,14 @@ class ChatView extends StatefulWidget {
 
 class ChatViewState extends State<ChatView> {
   final _scrollController = ScrollController();
-  late ValueNotifier<List<ValueNotifier<MessageModel>>> _messagesNotifiers; // = ValueNotifier([]);
+
+  late ValueNotifier<List<ValueNotifier<MessageModel>>> _messagesNotifiers;
+
   static final List<User> _participants = [];
+  static List<User> get participants => _participants;
+
   String myInput = '';
   final _textController = TextEditingController();
-  static List<User> get participants => _participants;
   late StreamSubscription _subscription;
   File? _file;
   late MessageModel _mineCurrent;
@@ -48,79 +51,95 @@ class ChatViewState extends State<ChatView> {
   @override
   void initState() {
     super.initState();
-    _messagesNotifiers = ValueNotifier([]);
+    _messagesNotifiers = ValueNotifier<List<ValueNotifier<MessageModel>>>([]);
     _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
+
     NetworkController.getParticipants(widget.model.id).then((res) async {
-      var json = jsonDecode(res);
-      ChatView.logger.debug("Participants: $json");
-      for (var u in json) {
+      var jsonList = jsonDecode(res);
+      ChatView.logger.debug("Participants: $jsonList");
+
+      for (var u in jsonList) {
         if (u['id'] == NetworkController.me.id) {
-          participants.add(NetworkController.me);
+          _participants.add(NetworkController.me);
         } else if (u['pfp_uuid'] != null) {
           var file = await NetworkController.getFile(u['pfp_uuid']);
           var user = User.fromJson(u);
           user.pfp = file?.readAsBytesSync();
-          participants.add(user);
+          _participants.add(user);
         } else {
-          participants.add(User.fromJson(u));
+          _participants.add(User.fromJson(u));
         }
       }
+
       _subscription = NetworkController.messageStreamController.stream.listen((message) {
-        var data = jsonDecode(message.toString());
-        switch (WSMType.values.firstWhere((element) => element.name == data['type'], orElse: () => WSMType.def)) {
+        final data = jsonDecode(message.toString());
+        final type = WSMType.values.firstWhere((e) => e.name == data['type'], orElse: () => WSMType.def);
+
+        switch (type) {
           case WSMType.loadMessages:
             {
-              var list =
-                  List.generate(
-                    data['messages'].length,
-                    (index) => MessageModel.fromJson(data['messages'][index]),
-                  ).toList();
+              final newList = List<MessageModel>.generate(
+                data['messages'].length,
+                (i) => MessageModel.fromJson(data['messages'][i]),
+              );
+              final newNotifiers = newList.map((m) => ValueNotifier<MessageModel>(m));
 
-              _messagesNotifiers.value = _messagesNotifiers.value + list.map((value) => ValueNotifier(value)).toList();
-              lastLoad = list.length;
+              _messagesNotifiers.value.addAll(newNotifiers);
+              lastLoad = newList.length;
+              _messagesNotifiers.notifyListeners();
               break;
             }
+
           case WSMType.getMessages:
             {
-              var list =
-                  List.generate(
-                    data['messages'].length,
-                    (index) => MessageModel.fromJson(data['messages'][index]),
-                  ).toList();
-              _messagesNotifiers.value.insertAll(0, list.map((value) => ValueNotifier(value)).toList());
-              lastLoad = list.length;
+              final newList = List<MessageModel>.generate(
+                data['messages'].length,
+                (i) => MessageModel.fromJson(data['messages'][i]),
+              );
+              final newNotifiers = newList.map((m) => ValueNotifier<MessageModel>(m));
+
+              _messagesNotifiers.value.insertAll(0, newNotifiers);
+              lastLoad = newList.length;
               _messagesNotifiers.notifyListeners();
               break;
             }
+
           case WSMType.newMessage:
             {
-              _messagesNotifiers.value.insert(0, ValueNotifier(MessageModel.fromJson(jsonDecode(data['data']))));
+              final incoming = MessageModel.fromJson(jsonDecode(data['data']));
+              _messagesNotifiers.value.insert(0, ValueNotifier<MessageModel>(incoming));
               _messagesNotifiers.notifyListeners();
               break;
             }
+
           case WSMType.updateMessage:
             {
-              var message = MessageModel.fromJson(jsonDecode(data['data']));
-              var target = _messagesNotifiers.value.firstWhere((element) => element.value.id == message.id);
-              target.value = target.value.copyWith(status: message.status);
+              final updated = MessageModel.fromJson(jsonDecode(data['data']));
+              final targetNotifier = _messagesNotifiers.value.firstWhere(
+                (n) => n.value.id == updated.id,
+                orElse: () => ValueNotifier<MessageModel>(updated),
+              );
+              targetNotifier.value = targetNotifier.value.copyWith(status: updated.status);
               break;
             }
+
           case WSMType.sendMessage:
             {
-              _messagesNotifiers.value.insert(0, ValueNotifier(MessageModel.fromJson(jsonDecode(data['data']))));
+              final sent = MessageModel.fromJson(jsonDecode(data['data']));
+              _messagesNotifiers.value.insert(0, ValueNotifier<MessageModel>(sent));
               _messagesNotifiers.notifyListeners();
               break;
             }
+
           case WSMType.error:
             {
               ToastService.showToast(data['message']);
               break;
             }
+
           case WSMType.def:
           default:
-            {
-              break;
-            }
+            break;
         }
       });
 
@@ -129,6 +148,7 @@ class ChatViewState extends State<ChatView> {
         'limit': limit,
         'chat_id': widget.model.id,
       }, WSMType.getMessages);
+
       _scrollController.addListener(_loadMoreMessages);
     });
   }
@@ -146,18 +166,22 @@ class ChatViewState extends State<ChatView> {
   }
 
   String formatTimestamp() {
-    var time = DateTime.now();
-    return "${time.year}-${(time.month < 10) ? '0${time.month}' : time.month}-${(time.day < 10) ? '0${time.day}' : time.day} ${(time.hour < 10) ? '0${time.hour}' : time.hour}:${(time.minute < 10) ? '0${time.minute}' : time.minute}:${(time.second < 10) ? '0${time.second}' : time.second}";
+    final time = DateTime.now();
+    return "${time.year}-"
+        "${(time.month < 10) ? '0${time.month}' : time.month}-"
+        "${(time.day < 10) ? '0${time.day}' : time.day} "
+        "${(time.hour < 10) ? '0${time.hour}' : time.hour}:"
+        "${(time.minute < 10) ? '0${time.minute}' : time.minute}:"
+        "${(time.second < 10) ? '0${time.second}' : time.second}";
   }
 
   Future<bool> dispatchMessage() async {
     ChatView.logger.debug("Message: ${_mineCurrent.toDynamic()}");
     if (_mineCurrent.data != null) {
-      return NetworkController.uploadFile(_mineCurrent.data!, _mineCurrent.fileUuid!).then((res) {
-        if (res != 200) return false;
-        NetworkController.websocketSend(_mineCurrent.toDynamic(), WSMType.sendMessage);
-        return true;
-      });
+      final res = await NetworkController.uploadFile(_mineCurrent.data!, _mineCurrent.fileUuid!);
+      if (res != 200) return false;
+      NetworkController.websocketSend(_mineCurrent.toDynamic(), WSMType.sendMessage);
+      return true;
     } else {
       NetworkController.websocketSend(_mineCurrent.toDynamic(), WSMType.sendMessage);
       return true;
@@ -166,20 +190,16 @@ class ChatViewState extends State<ChatView> {
 
   void sendMessage() async {
     ChatView.logger.debug("Messages: $myInput");
-
     if ((_mineCurrent.text == null || _mineCurrent.text!.isEmpty) && _mineCurrent.fileUuid == null) return;
-    _mineCurrent.timeStamp = formatTimestamp();
 
+    _mineCurrent.timeStamp = formatTimestamp();
     if (_mineCurrent.fileUuid == null) {
       _mineCurrent.type = MessageType.text;
     }
-
     _mineCurrent.status = MessageStatus.sent;
 
-    // Send message
     await dispatchMessage();
 
-    // messages.value = [_mineCurrent, ...messages.value];
     _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
     _textController.clear();
     clearFileSelection();
@@ -191,15 +211,15 @@ class ChatViewState extends State<ChatView> {
 
   void pickFile() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: false, compressionQuality: 30);
-      if (result == null) {
-        return;
-      }
+      final result = await FilePicker.platform.pickFiles(allowMultiple: false, compressionQuality: 30);
+      if (result == null) return;
+
       _file = File(result.files.single.path!);
       if (_file == null) return;
-      var extension = p.extension(_file!.path);
-      var type = resolveMessageType(extension);
-      var fileUuid = Main.getUuid();
+
+      final extension = p.extension(_file!.path);
+      final type = resolveMessageType(extension);
+      final fileUuid = Main.getUuid();
       _mineCurrent.fileUuid = fileUuid + extension;
       _mineCurrent.type = type;
       _mineCurrent.data = await _file!.readAsBytes();
@@ -212,11 +232,16 @@ class ChatViewState extends State<ChatView> {
   MessageType resolveMessageType(String extension) {
     ChatView.logger.debug("Resolving extension: $extension");
     switch (extension) {
-      case ".mp4" || ".mov" || ".mkv":
+      case ".mp4":
+      case ".mov":
+      case ".mkv":
         return MessageType.video;
-      case ".mp3" || ".wav":
+      case ".mp3":
+      case ".wav":
         return MessageType.audio;
-      case ".png" || ".jpg" || ".jpeg":
+      case ".png":
+      case ".jpg":
+      case ".jpeg":
         return MessageType.image;
       default:
         return MessageType.file;
@@ -227,7 +252,7 @@ class ChatViewState extends State<ChatView> {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
-        duration: Duration(seconds: 1),
+        duration: const Duration(seconds: 1),
         curve: Curves.easeInOut,
       );
     }
@@ -241,8 +266,8 @@ class ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
-    for (var element in _messagesNotifiers.value) {
-      element.dispose();
+    for (var notifier in _messagesNotifiers.value) {
+      notifier.dispose();
     }
     _messagesNotifiers.dispose();
     _subscription.cancel();
@@ -256,43 +281,41 @@ class ChatViewState extends State<ChatView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.model.name),
-        leading: IconButton(onPressed: () => widget.changePage(Pages.chats), icon: Icon(Icons.arrow_back)),
+        leading: IconButton(onPressed: () => widget.changePage(Pages.chats), icon: const Icon(Icons.arrow_back)),
       ),
-      backgroundColor: Color.fromARGB(169, 68, 68, 68),
+      backgroundColor: const Color.fromARGB(169, 68, 68, 68),
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
           Expanded(
             child: Center(
-              child: ValueListenableBuilder(
+              child: ValueListenableBuilder<List<ValueNotifier<MessageModel>>>(
                 valueListenable: _messagesNotifiers,
-                builder: (context, value, child) {
-                  if (value.isEmpty) {
-                    return WowSoEmpty();
+                builder: (context, notifiers, _) {
+                  if (notifiers.isEmpty) {
+                    return const WowSoEmpty();
                   }
-                  // ChatView.logger.debug("Messages: ${value[value.length - 1]}");
                   return ListView.builder(
                     reverse: true,
                     controller: _scrollController,
-                    itemCount: value.length,
+                    itemCount: notifiers.length,
                     itemBuilder: (context, index) {
-                      return ValueListenableBuilder(
-                        valueListenable: value[index],
-                        builder: (context, value, child) {
-                          // ChatView.logger.debug("RENDERING: ${value.text}");
+                      final messageNotifier = notifiers[index];
+                      return ValueListenableBuilder<MessageModel>(
+                        valueListenable: messageNotifier,
+                        builder: (context, message, __) {
                           return VisibilityDetector(
-                            key: Key(value.id.toString()),
+                            key: ValueKey<int>(message.id ?? 0),
                             onVisibilityChanged: (info) {
-                              // ChatView.logger.debug("Visible: ${info.visibleFraction}, status: ${value.sender}");
                               if (info.visibleFraction >= 0.5 &&
-                                  value.status == MessageStatus.delivered &&
-                                  value.sender != NetworkController.me.id) {
-                                // ChatView.logger.debug("Visible: ${value.text}");
-                                value = value.copyWith(status: MessageStatus.seen);
-                                NetworkController.websocketSend(value.toDynamic(), WSMType.updateMessage);
+                                  message.status == MessageStatus.delivered &&
+                                  message.sender != NetworkController.me.id) {
+                                final updated = message.copyWith(status: MessageStatus.seen);
+                                messageNotifier.value = updated;
+                                NetworkController.websocketSend(updated.toDynamic(), WSMType.updateMessage);
                               }
                             },
-                            child: MessageTile(message: value, key: ValueKey(value.id.toString())),
+                            child: MessageTile(key: ValueKey<int>(message.id ?? 0), message: message),
                           );
                         },
                       );
@@ -302,6 +325,8 @@ class ChatViewState extends State<ChatView> {
               ),
             ),
           ),
+
+          // ─── Bottom input row ──────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -309,15 +334,15 @@ class ChatViewState extends State<ChatView> {
                 Expanded(
                   child: TextField(
                     controller: _textController,
-                    decoration: InputDecoration(hintText: 'Type a message', border: OutlineInputBorder()),
-                    onChanged: (value) => {addMyText(value)},
+                    decoration: const InputDecoration(hintText: 'Type a message', border: OutlineInputBorder()),
+                    onChanged: (value) => addMyText(value),
                   ),
                 ),
                 IconButton(
-                  icon: _mineCurrent.fileUuid == null ? Icon(Icons.attach_file) : Icon(Icons.clear),
+                  icon: _mineCurrent.fileUuid == null ? const Icon(Icons.attach_file) : const Icon(Icons.clear),
                   style: ButtonStyle(
-                    shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
-                    backgroundColor: WidgetStateProperty.all(Colors.cyan[900]),
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
+                    backgroundColor: MaterialStateProperty.all(Colors.cyan[900]),
                   ),
                   onPressed: () {
                     if (_mineCurrent.fileUuid == null) {
@@ -329,13 +354,11 @@ class ChatViewState extends State<ChatView> {
                 ),
                 IconButton(
                   style: ButtonStyle(
-                    shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
-                    backgroundColor: WidgetStateProperty.all(Colors.cyan[900]),
+                    shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
+                    backgroundColor: MaterialStateProperty.all(Colors.cyan[900]),
                   ),
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    sendMessage();
-                  },
+                  icon: const Icon(Icons.send),
+                  onPressed: sendMessage,
                 ),
               ],
             ),
