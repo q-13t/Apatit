@@ -13,9 +13,9 @@ import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 
 class NewChatController extends StatefulWidget {
-  final Function(Pages page) changePage;
+  final ChatTileModel? model;
 
-  const NewChatController({super.key, required this.changePage});
+  const NewChatController({super.key, required this.model});
 
   @override
   State<NewChatController> createState() => _NewChatControllerState();
@@ -79,8 +79,14 @@ class _NewChatControllerState extends State<NewChatController> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: Text('New Chat'),
-        leading: IconButton(onPressed: () => {widget.changePage(Pages.chats)}, icon: Icon(Icons.arrow_back)),
+        title: Text(widget.model?.name ?? 'New Chat'),
+        leading: IconButton(
+          onPressed:
+              () => {
+                Navigator.pop(context, (_) => {setState(() {})}),
+              },
+          icon: Icon(Icons.arrow_back),
+        ),
       ),
       body: Column(
         children: [
@@ -93,11 +99,7 @@ class _NewChatControllerState extends State<NewChatController> {
                     {
                       username = value,
                       offset = 0,
-                      NetworkController.websocketSend({
-                        'username': username,
-                        'offset': offset,
-                        'limit': limit,
-                      }, WSMType.getUsersByName),
+                      NetworkController.websocketSend({'username': username, 'offset': offset, 'limit': limit}, WSMType.getUsersByName),
                     },
                 },
           ),
@@ -118,15 +120,25 @@ class _NewChatControllerState extends State<NewChatController> {
                           child: ElevatedButton(
                             onPressed:
                                 () => {
-                                  NetworkController.websocketSend({
-                                    'user1': value[index].id,
-                                    'user2': NetworkController.me.id,
-                                  }, WSMType.newChatPrivate),
+                                  if (widget.model == null)
+                                    {
+                                      NetworkController.websocketSend({'user1': value[index].id, 'user2': NetworkController.me.id}, WSMType.newChatPrivate),
+                                    }
+                                  else
+                                    {
+                                      NetworkController.addParticipantToChat(widget.model!.id, value[index].id).then(
+                                        (res) => {
+                                          if (res)
+                                            {
+                                              NetworkController.websocketSend({'chat_id': widget.model!.id, 'user_id': value[index].id, 'sender_id': NetworkController.me.id}, WSMType.addParticipant),
+                                            }
+                                          else
+                                            {ToastService.showToast('Something went wrong')},
+                                        },
+                                      ),
+                                    },
                                 },
-                            child: Padding(
-                              padding: EdgeInsets.all(5),
-                              child: UserTile(key: Key(value[index].username), model: value[index]),
-                            ),
+                            child: Padding(padding: EdgeInsets.all(5), child: UserTile(key: Key(value[index].username), model: value[index])),
                           ),
                         );
                       },

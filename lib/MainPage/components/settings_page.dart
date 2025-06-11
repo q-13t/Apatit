@@ -148,8 +148,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           uiSettings: [
                             AndroidUiSettings(
                               toolbarTitle: 'Crop Image',
-                              backgroundColor: Color.fromARGB(169, 68, 68, 68),
-                              toolbarWidgetColor: Colors.white,
+                              backgroundColor: Color.fromARGB(169, 0, 0, 0),
+                              toolbarWidgetColor: Colors.black,
                               cropStyle: CropStyle.circle,
                               initAspectRatio: CropAspectRatioPreset.original,
                               lockAspectRatio: false,

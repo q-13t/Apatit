@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -28,6 +30,8 @@ class NetworkController {
   static late SharedPreferences _prefs;
   static late Logger _logger;
   static late Directory tempDir;
+
+  static BuildContext? mainContext;
 
   static User _me = User(-1, "", "");
   static User get me => _me;
@@ -67,24 +71,23 @@ class NetworkController {
 
   static Future<bool> ping() async {
     _logger.debug("Pinging server");
-    final response = await http
-        .get(Uri.http(baseUrlHttp, '/ping'))
-        .timeout(Duration(seconds: 30), onTimeout: () => http.Response("Unreachable", 523));
-    if (response.statusCode != 523) {
+    final response = await http.get(Uri.http(baseUrlHttp, '/ping')).timeout(Duration(seconds: 30), onTimeout: () => http.Response("Unreachable", 523)).catchError((e) => http.Response(e.toString(), 523));
+    if (response.statusCode == 200) {
       _logger.info("Pinged server");
       return true;
     } else {
-      _logger.info("Failed to ping server");
+      _logger.info("Failed to ping server, response: ${response.body}");
       return false;
     }
   }
 
-  factory NetworkController() {
+  factory NetworkController(context) {
     if (!_initialized) {
       _instance = NetworkController._();
       _logger = Logger("NetworkController");
       _instance.init();
       _initialized = true;
+      mainContext = context;
     } else if (token == null || token == '') {
       _instance.init();
     }
@@ -116,11 +119,13 @@ class NetworkController {
       },
       onError: (error) async {
         ToastService.showToast('Network error: $error');
+        Navigator.popUntil(mainContext!, ModalRoute.withName('/'));
         await _prefs.setString('token', jwtNotifier.value ?? '');
         await setToken(null);
       },
       onDone: () async {
         ToastService.showToast('No Connection To The Server');
+        Navigator.popUntil(mainContext!, ModalRoute.withName('/'));
         await _prefs.setString('token', jwtNotifier.value ?? '');
         await setToken(null);
       },
@@ -146,10 +151,7 @@ class NetworkController {
     var url = Uri.http(baseUrlHttp, '/user/login');
     _logger.debug("$url");
     var data = jsonEncode({'username': username, 'password': password});
-    var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((
-      error,
-      stackTrace,
-    ) {
+    var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((error, stackTrace) {
       //   _logger.err(error.toString());
       return http.Response('Error', 500);
     });
@@ -164,10 +166,7 @@ class NetworkController {
   static Future<bool> register(String username, String password) async {
     var url = Uri.http(baseUrlHttp, '/user/register');
     var data = jsonEncode({'username': username, 'password': password});
-    var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((
-      error,
-      stackTrace,
-    ) {
+    var response = await http.post(url, body: data, headers: {'Content-Type': 'application/json'}).onError((error, stackTrace) {
       return http.Response('Error', 500);
     });
     if (response.statusCode != 200) {
@@ -206,13 +205,10 @@ class NetworkController {
 
   static Future<bool> askValidation(String token) async {
     var url = Uri.http(baseUrlHttp, '/user/validateToken');
-    var response = await http
-        .post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'})
-        .timeout(Duration(seconds: 50))
-        .onError((error, stackTrace) {
-          setToken(null);
-          return http.Response('Error', 500);
-        });
+    var response = await http.post(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'}).timeout(Duration(seconds: 50)).onError((error, stackTrace) {
+      setToken(null);
+      return http.Response('Error', 500);
+    });
     _logger.debug("Validation response: ${response.statusCode} - reason: ${response.body}");
     return response.statusCode == 200;
   }
@@ -230,6 +226,10 @@ class NetworkController {
     request.headers['Authorization'] = 'Bearer ${jwtNotifier.value}';
     var response = await request.send();
     _logger.debug("Upload file response: ${response.statusCode}");
+    if (response.statusCode == 200) {
+      var file = File('${tempDir.path}/$uuid');
+      await file.writeAsBytes(data);
+    }
     if (response.statusCode == 401) {
       ToastService.showToast('Unauthorized');
       final secureStorage = FlutterSecureStorage();
@@ -246,31 +246,20 @@ class NetworkController {
       return file;
     } else {
       var url = Uri.http(baseUrlHttp, '/file', {'uuid': fileUuid});
-      return http
-          .get(
-            url,
-            headers: {'Content-Type': 'application/octet-stream', 'Authorization': 'Bearer ${jwtNotifier.value}'},
-          )
-          .then((response) async {
-            if (response.statusCode == 200) {
-              return await file.writeAsBytes(response.bodyBytes);
-            } else {
-              return null;
-            }
-          });
+      return http.get(url, headers: {'Content-Type': 'application/octet-stream', 'Authorization': 'Bearer ${jwtNotifier.value}'}).then((response) async {
+        if (response.statusCode == 200) {
+          return await file.writeAsBytes(response.bodyBytes);
+        } else {
+          return null;
+        }
+      });
     }
   }
 
   static Future<int> updateUsername(String newUserName) async {
     var url = Uri.http(baseUrlHttp, '/user/changeUsername');
     var data = jsonEncode({"username": me.username, "newUsername": newUserName});
-    var response = await http
-        .patch(
-          url,
-          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'},
-          body: data,
-        )
-        .onError((error, stackTrace) => http.Response('Error', 500));
+    var response = await http.patch(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}, body: data).onError((error, stackTrace) => http.Response('Error', 500));
     _logger.debug("updateUsername response: ${response.statusCode} - reason: ${response.body}");
     if (response.statusCode == 401) {
       ToastService.showToast('Unauthorized');
@@ -287,13 +276,7 @@ class NetworkController {
   static Future<int> updatePassword(String newPassword, String oldPassword) async {
     var url = Uri.http(baseUrlHttp, '/user/changePassword');
     var data = jsonEncode({"username": me.username, "old_password": oldPassword, "new_password": newPassword});
-    var response = await http
-        .patch(
-          url,
-          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'},
-          body: data,
-        )
-        .onError((error, stackTrace) => http.Response('Error', 500));
+    var response = await http.patch(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}, body: data).onError((error, stackTrace) => http.Response('Error', 500));
     _logger.debug("updatePassword response: ${response.statusCode} - reason: ${response.body}");
     if (response.statusCode == 401) {
       ToastService.showToast('Unauthorized');
@@ -309,13 +292,7 @@ class NetworkController {
   static Future<int> updatePFP(String fileName, File? newPfp) async {
     var url = Uri.http(baseUrlHttp, '/user/changePfp');
     var data = jsonEncode({"username": me.username, "pfp": fileName});
-    var response = await http
-        .patch(
-          url,
-          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'},
-          body: data,
-        )
-        .onError((error, stackTrace) => http.Response('Error', 500));
+    var response = await http.patch(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}, body: data).onError((error, stackTrace) => http.Response('Error', 500));
     if (response.statusCode == 401) {
       ToastService.showToast('Unauthorized');
       final secureStorage = FlutterSecureStorage();
@@ -330,8 +307,34 @@ class NetworkController {
 
   static Future<String> getParticipants(int id) async {
     var url = Uri.http(baseUrlHttp, '/chat/participants', {'id': id.toString()});
-    return await http
-        .get(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'})
-        .then((response) => response.body);
+    return await http.get(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}).then((response) => response.body);
+  }
+
+  static Future<bool> changeChatName(int chat_id, String name) async {
+    var url = Uri.http(baseUrlHttp, '/chat/changeName');
+    var data = jsonEncode({"chat_id": chat_id, "chat_name": name});
+    var response = await http.patch(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}, body: data).catchError((e) => http.Response('Error', 500));
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> changeChatPfp(int chat_id, String pfp_uuid) async {
+    var url = Uri.http(baseUrlHttp, '/chat/changePfp');
+    var data = jsonEncode({"chat_id": chat_id, "pfp_uuid": pfp_uuid});
+    var response = await http.patch(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}, body: data).catchError((e) => http.Response('Error', 500));
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> addParticipantToChat(int chat_id, int user_id) async {
+    var url = Uri.http(baseUrlHttp, '/chat/addParticipant');
+    var data = jsonEncode({"chat_id": chat_id, "user_id": user_id});
+    var response = await http.patch(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}, body: data).catchError((e) => http.Response('Error', 500));
+    return response.statusCode == 200;
+  }
+
+  static Future<bool> removeParticipantFromChat(int chat_id, int user_id) async {
+    var url = Uri.http(baseUrlHttp, '/chat/removeParticipant');
+    var data = jsonEncode({"chat_id": chat_id, "user_id": user_id});
+    var response = await http.patch(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}, body: data).catchError((e) => http.Response('Error', 500));
+    return response.statusCode == 200;
   }
 }

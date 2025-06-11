@@ -1,3 +1,6 @@
+import 'package:Apatite/MainPage/components/Chat/chat_settings.dart';
+import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
+import 'package:Apatite/MainPage/components/new_chat/new_chat_controller.dart';
 import 'package:Apatite/MainPage/main_page_controller.dart';
 import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/auth/auth_controller.dart';
@@ -20,7 +23,7 @@ class MyApp extends StatefulWidget {
 }
 
 class Main extends State<MyApp> {
-  late Logger log;
+  final Logger log = Logger("Main");
   static const uuid = Uuid();
 
   static String getUuid() => uuid.v4();
@@ -28,7 +31,6 @@ class Main extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    log = Logger("MyApp");
     Logger.setLevel(2);
   }
 
@@ -37,12 +39,26 @@ class Main extends State<MyApp> {
     super.dispose();
   }
 
+  Route<dynamic>? __onGenerateRoute(RouteSettings settings) {
+    final args = settings.arguments as Map<String, dynamic>?;
+    switch (settings.name) {
+      case '/newChat':
+        return MaterialPageRoute(builder: (context) => NewChatController(model: args?['model']));
+      case '/chat':
+        return MaterialPageRoute(builder: (context) => ChatView(model: args?['model']));
+      case '/chatSettings':
+        return MaterialPageRoute(builder: (context) => ChatSettings(model: args?['model']));
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Apatite',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.white38, brightness: Brightness.dark)),
+      onGenerateRoute: __onGenerateRoute,
       home: Directionality(
         textDirection: TextDirection.ltr,
         child: ValueListenableBuilder(
@@ -51,7 +67,7 @@ class Main extends State<MyApp> {
             ToastService.init(context);
             log.debug("JWT: $value");
             if (value == null) {
-              NetworkController();
+              NetworkController(context);
               return const Scaffold(body: Center(child: CircularProgressIndicator()));
             }
 

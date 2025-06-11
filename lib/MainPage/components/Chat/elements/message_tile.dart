@@ -4,6 +4,7 @@ import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/audio_player.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/video_player.dart';
 import 'package:Apatite/api/network_controller.dart';
+import 'package:Apatite/main.dart';
 import 'package:Apatite/models/message_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
@@ -34,46 +35,36 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
         padding: const EdgeInsets.all(8.0),
         margin: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: (widget.message.sender == NetworkController.me.id) ? Colors.cyan[700] : Colors.cyan[900],
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: (widget.message.sender == NetworkController.me.id) ? Colors.cyan[700] : Colors.cyan[900]),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  child:
-                      (ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).pfp != null)
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(100),
-                            child: Image.memory(
-                              ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).pfp!,
-                              // Give this a stable key based on fileUuid or message.id
-                              key: ValueKey<String>(widget.message.fileUuid ?? 'no-file-${widget.message.id}'),
-                            ),
-                          )
-                          : const Icon(Icons.person),
+                Hero(
+                  tag: Main.getUuid(),
+                  child: CircleAvatar(
+                    child:
+                        (ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).pfp != null)
+                            ? ClipRRect(
+                              borderRadius: BorderRadius.circular(100),
+                              child: Image.memory(
+                                ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).pfp!,
+                                // Give this a stable key based on fileUuid or message.id
+                                key: ValueKey<String>(widget.message.fileUuid ?? 'no-file-${widget.message.id}'),
+                              ),
+                            )
+                            : const Icon(Icons.person),
+                  ),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).username,
-                  style: const TextStyle(fontSize: 20),
-                ),
+                Text(ChatViewState.participants.firstWhere((u) => u.id == widget.message.sender).username, style: const TextStyle(fontSize: 20)),
               ],
             ),
             const SizedBox(height: 5),
             buildMedia(context, widget.message),
             Text(widget.message.text ?? "", style: const TextStyle(fontSize: 20)),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(widget.message.timeStamp ?? "", style: const TextStyle(fontSize: 15)),
-                const Spacer(),
-                getIcon(context, widget.message.status ?? MessageStatus.sent),
-              ],
-            ),
+            Row(mainAxisSize: MainAxisSize.min, children: [Text(widget.message.timeStamp ?? "", style: const TextStyle(fontSize: 15)), const Spacer(), getIcon(context, widget.message.status ?? MessageStatus.sent)]),
           ],
         ),
       ),
@@ -98,11 +89,9 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
           case MessageType.file:
             return const Placeholder();
           case null:
-            // TODO: Handle this case.
             throw UnimplementedError();
           case MessageType.text:
-            // TODO: Handle this case.
-            throw UnimplementedError();
+            throw Container();
         }
       },
     );

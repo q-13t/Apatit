@@ -16,7 +16,7 @@ class Logger {
     _clazz = clazz;
   }
 
-  void debug(String message) {
+  void debug(String? message) {
     if (_level >= 2) {
       if (_clazz.length < _maxClazzName) {
         _clazz = _clazz.padLeft(_maxClazzName);
@@ -25,7 +25,7 @@ class Logger {
     }
   }
 
-  void info(String message) {
+  void info(String? message) {
     if (_level >= 1) {
       if (_clazz.length < _maxClazzName) {
         _clazz = _clazz.padLeft(_maxClazzName);
@@ -34,7 +34,7 @@ class Logger {
     }
   }
 
-  void err(String message) {
+  void err(String? message) {
     if (_level >= 0) {
       if (_clazz.length < _maxClazzName) {
         _clazz = _clazz.padLeft(_maxClazzName);

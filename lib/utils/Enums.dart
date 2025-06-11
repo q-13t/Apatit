@@ -1,12 +1,6 @@
-enum Pages { profile, settings, chat, chats, newChat }
+enum Pages { settings, chat, chats, newChat, chatSettings }
 
-final pagesWrapper = {
-  Pages.profile: 'Profile',
-  Pages.settings: 'Settings',
-  Pages.chat: 'Chat',
-  Pages.chats: 'Messages',
-  Pages.newChat: 'New Chat',
-};
+final pagesWrapper = {Pages.settings: 'Settings', Pages.chat: 'Chat', Pages.chats: 'Messages', Pages.newChat: 'New Chat'};
 
 enum Status { online, offline }
 
@@ -14,21 +8,11 @@ final statusWrapper = {Status.online: 'Online', Status.offline: 'Offline'};
 
 enum MessageType { text, image, video, audio, file }
 
-final messageTypeWrapper = {
-  MessageType.text: 'text',
-  MessageType.image: 'image',
-  MessageType.video: 'video',
-  MessageType.audio: 'audio',
-  MessageType.file: 'file',
-};
+final messageTypeWrapper = {MessageType.text: 'text', MessageType.image: 'image', MessageType.video: 'video', MessageType.audio: 'audio', MessageType.file: 'file'};
 
 enum MessageStatus { sent, seen, delivered }
 
-final messageStatusWrapper = {
-  MessageStatus.sent: 'sent',
-  MessageStatus.seen: 'seen',
-  MessageStatus.delivered: 'delivered',
-};
+final messageStatusWrapper = {MessageStatus.sent: 'sent', MessageStatus.seen: 'seen', MessageStatus.delivered: 'delivered'};
 
 enum WSMType {
   error,
@@ -47,7 +31,11 @@ enum WSMType {
   deleteChat,
   newMessage,
   loadMessages,
-  def,
+  addParticipant,
+  updateChat,
+  updateParticipants,
+  removeParticipant,
+  getParticipants,
 }
 
 // ignore: non_constant_identifier_names
@@ -67,4 +55,9 @@ final WSMTWrapper = {
   WSMType.deleteChat: "deleteChat",
   WSMType.newMessage: "newMessage",
   WSMType.loadMessages: "loadMessages",
+  WSMType.addParticipant: "addParticipant",
+  WSMType.updateChat: "updateChat",
+  WSMType.updateParticipants: "updateParticipants",
+  WSMType.removeParticipant: "removeParticipant",
+  WSMType.getParticipants: "getParticipants",
 };
