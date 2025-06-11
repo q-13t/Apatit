@@ -2,6 +2,7 @@ package edu.chat.controllers;
 
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,10 +20,12 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import edu.chat.routes.ParticipantsRouts;
 import edu.chat.routes.UserRoutes;
+import edu.chat.services.ChatService;
 import edu.chat.services.WEBSocketService;
 import edu.chat.views.enums.WEBSocketRequestType;
 
@@ -43,6 +46,9 @@ public class WEBSocketController extends WebSocketServer {
 
     @Autowired
     private ParticipantsRouts participantsRouts;
+
+    @Autowired
+    private ChatService chatService;
 
     public static String getServerData() {
         return WEBSC.getAddress().getAddress().getHostAddress() + ":" + WEBSC.getPort();
@@ -129,6 +135,41 @@ public class WEBSocketController extends WebSocketServer {
         log.info("ChatServer started on: " + getServerData());
     }
 
+    private void dispatchUpdate(JsonObject data, int chat_id, WEBSocketRequestType type) {
+        List<Integer> ids = participantsRouts.getFromChat(chat_id);
+        JsonObject participantMessage = new JsonObject();
+        participantMessage.addProperty("type", type.toString());
+        participantMessage.addProperty("data", data.toString());
+        for (Integer id : ids) {
+            log.debug("Sending data to user: " + id);
+            if (clients.containsKey(id)) {
+                clients.get(id).send(participantMessage.toString());
+            }
+        }
+    }
+
+    private void dispatchToChatExcluding(JsonElement preparedData, int chat_id, WEBSocketRequestType type, ArrayList<Integer> exclude) {
+        List<Integer> ids = participantsRouts.getFromChat(chat_id);
+        JsonObject participantMessage = new JsonObject();
+        participantMessage.addProperty("type", type.toString());
+        participantMessage.addProperty("data", preparedData.toString());
+        for (Integer id : ids) {
+            log.debug("Sending data to user: " + id);
+            if (clients.containsKey(id) && !exclude.contains(id)) {
+                clients.get(id).send(participantMessage.toString());
+            }
+        }
+    }
+
+    private void dispatchToUser(JsonElement data, int user_id, WEBSocketRequestType type) {
+        JsonObject participantMessage = new JsonObject();
+        participantMessage.addProperty("type", type.toString());
+        participantMessage.addProperty("data", data.toString());
+        if (clients.containsKey(user_id)) {
+            clients.get(user_id).send(participantMessage.toString());
+        }
+    }
+
     private void dispatchToChat(JsonObject data, int chat_id, WEBSocketRequestType type) {
         List<Integer> ids = participantsRouts.getFromChat(chat_id);
         if (type != WEBSocketRequestType.updateMessage) {
@@ -200,6 +241,7 @@ public class WEBSocketController extends WebSocketServer {
                 } else {
                     response.addProperty("success", false);
                 }
+                response.addProperty("type", requestType.toString());
                 break;
             }
             case deleteChat: {
@@ -214,14 +256,51 @@ public class WEBSocketController extends WebSocketServer {
             case updateMessage: {
                 if (webSocketService.prepareUpdateMessageResponse(requestType, data)) {
                     response.addProperty("success", true);
-                    response.addProperty("data", data.toString());
                     dispatchToChat(data, data.get("chat_id").getAsInt(), requestType);
                 } else {
                     response.addProperty("success", false);
                 }
+                response.addProperty("data", data.toString());
+                response.addProperty("type", requestType.toString());
 
                 break;
             }
+            case updateChat: {
+                int chat_id = data.get("chat_id").getAsInt();
+                JsonObject chat = chatService.getByID(chat_id).toJson();
+                dispatchUpdate(chat, chat_id, requestType);
+                response.addProperty("data", chat.toString());
+                response.addProperty("type", requestType.toString());
+                break;
+            }
+
+            case addParticipant:
+            case removeParticipant: {
+                JsonObject user = userService.getUserByID(data.get("user_id").getAsInt()).toJson();
+                JsonObject chat = chatService.getByID(data.get("chat_id").getAsInt()).toJson();
+                user.remove("password");
+
+                JsonObject preparedData = new JsonObject();
+                preparedData.addProperty("user", user.toString());
+                preparedData.addProperty("chat", chat.toString());
+
+                dispatchToChatExcluding(preparedData, data.get("chat_id").getAsInt(), requestType, new ArrayList<>() {
+                    {
+                        add(data.get("sender_id").getAsInt());
+                    }
+                });
+                dispatchToUser(preparedData, data.get("user_id").getAsInt(), requestType);
+
+                response.addProperty("data", preparedData.toString());
+                response.addProperty("type", requestType.toString());
+                break;
+            }
+
+            case getParticipants: {
+                response = webSocketService.prepareGetParticipantsResponse(requestType, data);
+                break;
+            }
+
             default: {
                 throw new UnsupportedOperationException("Unsupported request type: " + requestType);
             }

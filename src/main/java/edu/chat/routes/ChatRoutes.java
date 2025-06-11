@@ -25,7 +25,7 @@ class ChatMapper implements RowMapper<Chat> {
         chat.setId(rs.getInt("id"));
         chat.setType(rs.getString("type"));
         chat.setName(rs.getString("name"));
-        chat.setPfp(rs.getString("pfp"));
+        chat.setPfp(rs.getString("pfp_uuid"));
         return chat;
     }
 }
@@ -97,16 +97,6 @@ public class ChatRoutes {
         }
     }
 
-    public boolean rename(int id, String new_name) {
-        try {
-            jdbcTemplate.update("UPDATE chat SET name = ? WHERE id = ?", new_name, id);
-            return true;
-        } catch (DataAccessException e) {
-            log.error(e.getMessage());
-            return false;
-        }
-    }
-
     public boolean createChatGroup(ArrayList<User> users, String name) {
         try {
             jdbcTemplate.update("INSERT INTO chat (type,name) VALUES ( ?,?)", ChatType.PRIVATE, name);
@@ -152,6 +142,26 @@ public class ChatRoutes {
 
         } catch (DataAccessException e) {
             log.error(e.getMessage());
+        }
+    }
+
+    public boolean changeName(int chat_id, String chat_name) {
+        try {
+            jdbcTemplate.update("UPDATE chat SET name = ? WHERE id = ?", chat_name, chat_id);
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean changePfp(int chat_id, String pfp) {
+        try {
+            jdbcTemplate.update("UPDATE chat SET pfp_uuid = ? WHERE id = ?", pfp, chat_id);
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
         }
     }
 

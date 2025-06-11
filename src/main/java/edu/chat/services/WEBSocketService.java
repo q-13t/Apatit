@@ -20,6 +20,7 @@ import edu.chat.Exceptions.InvalidUserNameException;
 import edu.chat.Exceptions.UserNotFoundException;
 import edu.chat.routes.ChatRoutes;
 import edu.chat.routes.MessageRoutes;
+import edu.chat.routes.ParticipantsRouts;
 import edu.chat.routes.UserRoutes;
 import edu.chat.utils.FileOperator;
 import edu.chat.views.Chat;
@@ -43,6 +44,9 @@ public class WEBSocketService {
 
     @Autowired
     private MessageRoutes messageRoutes;
+
+    @Autowired
+    private ParticipantsRouts participantsRouts;
 
     // WEBSocketService(MessageService messageService) {
     // this.messageService = messageService;
@@ -170,5 +174,25 @@ public class WEBSocketService {
         log.debug(message);
         messageService.updateMessage(message);
         return true;
+    }
+
+    public JsonObject prepareGetParticipantsResponse(WEBSocketRequestType requestType, JsonObject data) {
+        JsonObject response = new JsonObject();
+
+        int chat_id = data.get("chat_id").getAsInt();
+        int offset = data.get("offset").getAsInt();
+        int limit = data.get("limit").getAsInt();
+
+        List<User> users = participantsRouts.getNParticipants(chat_id, offset, limit);
+        JsonArray list = new JsonArray();
+        if (users != null && !users.isEmpty()) {
+            for (User user : users) {
+                list.add(user.toJson());
+            }
+        }
+        response.add("participants", list);
+
+        response.addProperty("type", requestType.toString());
+        return response;
     }
 }

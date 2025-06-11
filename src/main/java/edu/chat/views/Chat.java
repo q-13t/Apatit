@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.JsonObject;
 
-import edu.chat.views.enums.ChatType;
-
 public class Chat {
 
     @JsonProperty("id")
@@ -17,14 +15,14 @@ public class Chat {
     @JsonProperty("name")
     private String name;
 
-    @JsonProperty("pfp")
+    @JsonProperty("pfp_uuid")
     private String pfp;
 
     @JsonProperty("lastMessage")
     private String lastMessage;
 
     @JsonCreator
-    public Chat(@JsonProperty("id") int id, @JsonProperty("type") String type, @JsonProperty("name") String name, @JsonProperty("pfp") String pfp, @JsonProperty("lastMessage") String lastMessage) {
+    public Chat(@JsonProperty("id") int id, @JsonProperty("type") String type, @JsonProperty("name") String name, @JsonProperty("pfp_uuid") String pfp, @JsonProperty("lastMessage") String lastMessage) {
         this.id = id;
         this.type = type;
         this.name = name;
