@@ -13,7 +13,6 @@ import 'package:Apatite/models/message_model.dart';
 import 'package:Apatite/models/user_model.dart';
 import 'package:Apatite/utils/enums.dart';
 import 'package:Apatite/utils/logger.dart';
-import 'package:Apatite/utils/toast_service.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;

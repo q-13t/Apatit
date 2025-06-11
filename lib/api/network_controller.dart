@@ -43,10 +43,9 @@ class NetworkController {
 
   static bool jwtIsEmpty() => jwtNotifier.value == null || jwtNotifier.value == '';
 
-  Future<void> init() async {
-    const delay = Duration(seconds: 1);
+  Future<void> init(int timeout) async {
     while (true) {
-      if (await ping()) {
+      if (await ping(timeout)) {
         _logger.debug("Initializing Network Controller");
         tempDir = await getTemporaryDirectory();
         _prefs = await SharedPreferences.getInstance();
@@ -65,13 +64,13 @@ class NetworkController {
         }
         break;
       }
-      await Future.delayed(delay);
+      await Future.delayed(Duration(seconds: timeout + 5));
     }
   }
 
-  static Future<bool> ping() async {
+  static Future<bool> ping(int timeout) async {
     _logger.debug("Pinging server");
-    final response = await http.get(Uri.http(baseUrlHttp, '/ping')).timeout(Duration(seconds: 30), onTimeout: () => http.Response("Unreachable", 523)).catchError((e) => http.Response(e.toString(), 523));
+    final response = await http.get(Uri.http(baseUrlHttp, '/ping')).timeout(Duration(seconds: timeout), onTimeout: () => http.Response("Unreachable", 523)).catchError((e) => http.Response(e.toString(), 523));
     if (response.statusCode == 200) {
       _logger.info("Pinged server");
       return true;
@@ -81,15 +80,15 @@ class NetworkController {
     }
   }
 
-  factory NetworkController(context) {
+  factory NetworkController(context, int timeout) {
     if (!_initialized) {
       _instance = NetworkController._();
       _logger = Logger("NetworkController");
-      _instance.init();
+      _instance.init(timeout);
       _initialized = true;
       mainContext = context;
     } else if (token == null || token == '') {
-      _instance.init();
+      _instance.init(timeout);
     }
     return _instance;
   }

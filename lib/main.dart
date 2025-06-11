@@ -25,7 +25,6 @@ class MyApp extends StatefulWidget {
 class Main extends State<MyApp> {
   final Logger log = Logger("Main");
   static const uuid = Uuid();
-
   static String getUuid() => uuid.v4();
 
   @override
@@ -67,8 +66,10 @@ class Main extends State<MyApp> {
             ToastService.init(context);
             log.debug("JWT: $value");
             if (value == null) {
-              NetworkController(context);
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+              NetworkController(context, 10);
+              return Scaffold(
+                body: Center(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(height: 20), Text("Reaching for server", style: TextStyle(fontSize: 20, color: Colors.white))]))),
+              );
             }
 
             return value.isEmpty ? const AuthController() : const MainPageController();
