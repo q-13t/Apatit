@@ -43,9 +43,14 @@ class NetworkController {
 
   static bool jwtIsEmpty() => jwtNotifier.value == null || jwtNotifier.value == '';
 
-  Future<void> init(int timeout) async {
+  Future<void> init(int timeout, void Function(String update) timerCallback) async {
+    var timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      var tick = (timer.tick % timeout) + 1;
+      timerCallback(tick.toString());
+    });
     while (true) {
       if (await ping(timeout)) {
+        timer.cancel();
         _logger.debug("Initializing Network Controller");
         tempDir = await getTemporaryDirectory();
         _prefs = await SharedPreferences.getInstance();
@@ -80,16 +85,13 @@ class NetworkController {
     }
   }
 
-  factory NetworkController(context, int timeout) {
+  factory NetworkController(context) {
     if (!_initialized) {
       _instance = NetworkController._();
       _logger = Logger("NetworkController");
-      _instance.init(timeout);
       _initialized = true;
       mainContext = context;
-    } else if (token == null || token == '') {
-      _instance.init(timeout);
-    }
+    } else if (token == null || token == '') {}
     return _instance;
   }
 

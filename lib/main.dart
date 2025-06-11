@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:Apatite/MainPage/components/Chat/chat_settings.dart';
 import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/new_chat/new_chat_controller.dart';
@@ -25,12 +27,54 @@ class MyApp extends StatefulWidget {
 class Main extends State<MyApp> {
   final Logger log = Logger("Main");
   static const uuid = Uuid();
+  String timer = "0";
+
+  final random = Random();
   static String getUuid() => uuid.v4();
+
+  List<String> uniqueEmojis = [
+    // Smileys & People
+    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+    '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️',
+    '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓',
+    '🤗', '🤔', '🫣', '🤭', '🫢', '🫡', '🤫', '🤥', '😶', '😐', '😑', '🫤', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱',
+    '😴', '🤤', '😪', '😵', '😵‍💫', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '💀',
+    '☠️', '👻', '👽', '👾', '🤖', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾',
+
+    // People & Body
+    '👶', '🧒', '👦', '👧', '🧑', '👱', '👨', '👩', '🧓', '👴', '👵', '🙍', '🙎', '🙅', '🙆', '💁', '🙋', '🧏', '🙇', '🤦', '🤷',
+
+    // Animals & Nature
+    '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🦁', '🐯', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧',
+    '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🪲', '🪳', '🦟', '🦗', '🕷️', '🦂',
+
+    // Food & Drink
+    '🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦',
+    '🥬', '🥒', '🌶️', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔', '🍠', '🥐', '🥯', '🍞', '🥖', '🫓', '🥨', '🧀', '🥚', '🍳', '🧈',
+    '🥞', '🧇', '🥓', '🥩', '🍗', '🍖', '🦴', '🌭', '🍔', '🍟', '🍕', '🥪', '🥙', '🧆', '🌮', '🌯', '🫔', '🥗', '🥘', '🫕', '🍝',
+    '🍜', '🍲', '🍛', '🍣', '🍱', '🥟', '🦪', '🍤', '🍙', '🍚', '🍘', '🍥', '🥠', '🥮', '🍢', '🍡', '🍧', '🍨', '🍦', '🥧', '🧁',
+    '🍰', '🎂', '🍮', '🍭', '🍬', '🍫', '🍿', '🧃', '🥤', '🧋', '🧉', '🍵', '☕', '🫖', '🥛', '🍼', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸',
+
+    // Travel & Places
+    '🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🛺', '🚲', '🛴', '🛵', '🏍️', '🛶', '⛵', '🛳️', '🚢', '✈️', '🚁', '🚀',
+
+    // Objects
+    '⌚', '📱', '📲', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽️', '🎞️', '📞', '☎️',
+    '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️', '🧭', '⏱️', '⏲️', '⏰', '🕰️', '🔋', '🔌', '💡', '🔦', '🕯️', '🪔', '🧯', '🛢️', '💸',
+
+    // Symbols
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️',
+    '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳',
+  ];
+
+  String emojis = '';
+  int timeout = 10;
 
   @override
   void initState() {
     super.initState();
     Logger.setLevel(2);
+    NetworkController(context).init(timeout, timerCallback);
   }
 
   @override
@@ -51,6 +95,17 @@ class Main extends State<MyApp> {
     return null;
   }
 
+  void timerCallback(String update) {
+    setState(() {
+      timer = update;
+
+      if (int.parse(timer) == 0) {
+        emojis = '';
+      }
+      emojis += uniqueEmojis[Random().nextInt(uniqueEmojis.length)];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -64,11 +119,25 @@ class Main extends State<MyApp> {
           valueListenable: NetworkController.jwtNotifier,
           builder: (context, value, child) {
             ToastService.init(context);
-            log.debug("JWT: $value");
+            // log.debug("JWT: $value");
             if (value == null) {
-              NetworkController(context, 10);
               return Scaffold(
-                body: Center(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(height: 20), Text("Reaching for server", style: TextStyle(fontSize: 20, color: Colors.white))]))),
+                body: Center(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(key: UniqueKey()),
+                        SizedBox(height: 20),
+                        Text("Reaching for server", style: TextStyle(fontSize: 20, color: Colors.white)),
+                        SizedBox(height: 20),
+                        Text(timer, style: TextStyle(fontSize: 20, color: Colors.white)),
+                        SizedBox(height: 20),
+                        Text(emojis, style: TextStyle(fontSize: 20, color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                ),
               );
             }
 
