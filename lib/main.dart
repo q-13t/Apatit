@@ -12,9 +12,30 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // NetworkController();
-  runApp(const MyApp());
+  runApp(const ThemeContext());
+}
+
+class ThemeContext extends StatelessWidget {
+  const ThemeContext({super.key});
+  Route<dynamic>? __onGenerateRoute(RouteSettings settings) {
+    final args = settings.arguments as Map<String, dynamic>?;
+    switch (settings.name) {
+      case '/newChat':
+        return MaterialPageRoute(builder: (context) => NewChatController(model: args?['model']));
+      case '/chat':
+        return MaterialPageRoute(builder: (context) => ChatView(model: args?['model']));
+      case '/chatSettings':
+        return MaterialPageRoute(builder: (context) => ChatSettings(model: args?['model']));
+      case '/':
+        return MaterialPageRoute(builder: (context) => build(context));
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(title: 'Apatite', debugShowCheckedModeBanner: false, theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.white38, brightness: Brightness.dark)), onGenerateRoute: __onGenerateRoute, home: MyApp());
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -74,7 +95,7 @@ class Main extends State<MyApp> {
   void initState() {
     super.initState();
     Logger.setLevel(2);
-    NetworkController(context).init(timeout, timerCallback);
+    NetworkController(navigatorCallback).init(timeout, timerCallback);
   }
 
   @override
@@ -82,24 +103,15 @@ class Main extends State<MyApp> {
     super.dispose();
   }
 
-  Route<dynamic>? __onGenerateRoute(RouteSettings settings) {
-    final args = settings.arguments as Map<String, dynamic>?;
-    switch (settings.name) {
-      case '/newChat':
-        return MaterialPageRoute(builder: (context) => NewChatController(model: args?['model']));
-      case '/chat':
-        return MaterialPageRoute(builder: (context) => ChatView(model: args?['model']));
-      case '/chatSettings':
-        return MaterialPageRoute(builder: (context) => ChatSettings(model: args?['model']));
-    }
-    return null;
+  void navigatorCallback() {
+    Navigator.popUntil(context, ModalRoute.withName('/'));
   }
 
   void timerCallback(String update) {
     setState(() {
       timer = update;
 
-      if (int.parse(timer) == 0) {
+      if (int.parse(timer) - 1 == 0) {
         emojis = '';
       }
       emojis += uniqueEmojis[Random().nextInt(uniqueEmojis.length)];
@@ -108,42 +120,35 @@ class Main extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Apatite',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.white38, brightness: Brightness.dark)),
-      onGenerateRoute: __onGenerateRoute,
-      home: Directionality(
-        textDirection: TextDirection.ltr,
-        child: ValueListenableBuilder(
-          valueListenable: NetworkController.jwtNotifier,
-          builder: (context, value, child) {
-            ToastService.init(context);
-            // log.debug("JWT: $value");
-            if (value == null) {
-              return Scaffold(
-                body: Center(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(key: UniqueKey()),
-                        SizedBox(height: 20),
-                        Text("Reaching for server", style: TextStyle(fontSize: 20, color: Colors.white)),
-                        SizedBox(height: 20),
-                        Text(timer, style: TextStyle(fontSize: 20, color: Colors.white)),
-                        SizedBox(height: 20),
-                        Text(emojis, style: TextStyle(fontSize: 20, color: Colors.white)),
-                      ],
-                    ),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: ValueListenableBuilder(
+        valueListenable: NetworkController.jwtNotifier,
+        builder: (context, value, child) {
+          ToastService.init(context);
+          if (value == null) {
+            return Scaffold(
+              body: Center(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(key: UniqueKey()),
+                      SizedBox(height: 20),
+                      Text("Reaching for server", style: TextStyle(fontSize: 20, color: Colors.white)),
+                      SizedBox(height: 20),
+                      Text(timer, style: TextStyle(fontSize: 20, color: Colors.white)),
+                      SizedBox(height: 20),
+                      Text(emojis, style: TextStyle(fontSize: 20, color: Colors.white)),
+                    ],
                   ),
                 ),
-              );
-            }
+              ),
+            );
+          }
 
-            return value.isEmpty ? const AuthController() : const MainPageController();
-          },
-        ),
+          return value.isEmpty ? const AuthController() : const MainPageController();
+        },
       ),
     );
   }

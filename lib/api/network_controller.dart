@@ -17,13 +17,12 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:path_provider/path_provider.dart';
 
 class NetworkController {
-  static NetworkController _instance = NetworkController._();
+  static NetworkController instance = NetworkController._();
   static bool _initialized = false;
   static String? token;
   static WebSocketChannel? _channel;
   static String baseUrlHttp = '192.168.137.1:8080';
   static String baseUrlWebSocket = 'ws://192.168.137.1:8081';
-  NetworkController._();
   static final ValueNotifier<String?> jwtNotifier = ValueNotifier(null);
   static final messageStreamController = StreamController<String>.broadcast();
   static final Map<String, Uint8List?> _pfpCache = {};
@@ -31,9 +30,10 @@ class NetworkController {
   static late Logger _logger;
   static late Directory tempDir;
 
-  static BuildContext? mainContext;
+  void Function()? returnToRoot;
 
   static User _me = User(-1, "", "");
+
   static User get me => _me;
   static Uint8List? getCachedPFP(String username) => _pfpCache[username];
 
@@ -42,6 +42,8 @@ class NetworkController {
   }
 
   static bool jwtIsEmpty() => jwtNotifier.value == null || jwtNotifier.value == '';
+
+  NetworkController._();
 
   Future<void> init(int timeout, void Function(String update) timerCallback) async {
     var timer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -85,15 +87,17 @@ class NetworkController {
     }
   }
 
-  factory NetworkController(context) {
+  factory NetworkController(void Function() navigatorCallback) {
     if (!_initialized) {
-      _instance = NetworkController._();
+      instance = NetworkController._();
       _logger = Logger("NetworkController");
+      instance.returnToRoot = navigatorCallback;
       _initialized = true;
-      mainContext = context;
     } else if (token == null || token == '') {}
-    return _instance;
+    return instance;
   }
+
+  static void setReturnToRoot(void Function() returnToRoot) => instance.returnToRoot = returnToRoot;
 
   static Future<void> setToken(String? token) async {
     jwtNotifier.value = token;
@@ -120,13 +124,13 @@ class NetworkController {
       },
       onError: (error) async {
         ToastService.showToast('Network error: $error');
-        Navigator.popUntil(mainContext!, ModalRoute.withName('/'));
+        instance.returnToRoot!();
         await _prefs.setString('token', jwtNotifier.value ?? '');
         await setToken(null);
       },
       onDone: () async {
         ToastService.showToast('No Connection To The Server');
-        Navigator.popUntil(mainContext!, ModalRoute.withName('/'));
+        instance.returnToRoot!();
         await _prefs.setString('token', jwtNotifier.value ?? '');
         await setToken(null);
       },
@@ -146,7 +150,7 @@ class NetworkController {
     return _channel!;
   }
 
-  NetworkController get instance => _instance;
+  //   NetworkController get instance => instance;
 
   static Future<bool> login(String? username, String? password) async {
     var url = Uri.http(baseUrlHttp, '/user/login');

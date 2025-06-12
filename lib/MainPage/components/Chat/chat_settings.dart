@@ -302,7 +302,7 @@ class _ChatSettingsState extends State<ChatSettings> {
                           if (res) {
                             NetworkController.websocketSend({'chat_id': widget.model.id, 'user_id': NetworkController.me.id, 'sender_id': NetworkController.me.id}, WSMType.removeParticipant);
                             ToastService.showToast('You left the chat');
-                            Navigator.popUntil(NetworkController.mainContext!, ModalRoute.withName('/'));
+                            NetworkController.instance.returnToRoot!();
                           } else {
                             ToastService.showToast('Something went wrong');
                           }
