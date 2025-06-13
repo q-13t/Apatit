@@ -60,9 +60,7 @@ class ChatViewState extends State<ChatView> {
       ChatView._logger.debug("Participants: $jsonList");
 
       for (var u in jsonList) {
-        if (u['id'] == NetworkController.me.id) {
-          _participants.add(NetworkController.me);
-        } else if (u['pfp_uuid'] != null) {
+        if (u['pfp_uuid'] != null) {
           var file = await NetworkController.getFile(u['pfp_uuid']);
           var user = User.fromJson(u);
           user.pfp = file?.readAsBytesSync();

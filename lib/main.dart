@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ThemeContext());
 }
 
