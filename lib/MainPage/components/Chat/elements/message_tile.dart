@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/audio_player.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/file_downloader.dart';
+import 'package:Apatite/MainPage/components/Chat/elements/image_container.dart';
 import 'package:Apatite/MainPage/components/Chat/elements/video_player.dart';
 import 'package:Apatite/api/network_controller.dart';
 import 'package:Apatite/main.dart';
@@ -27,9 +28,14 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
   bool get wantKeepAlive => true;
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
-    MessageTile.logger.info("Building message tile ${widget.message.text}");
+    // MessageTile.logger.info("Building message tile ${widget.message.text}");
 
     return Align(
       alignment: (widget.message.sender == NetworkController.me.id) ? Alignment.centerRight : Alignment.centerLeft,
@@ -85,7 +91,7 @@ class _MessageTileState extends State<MessageTile> with AutomaticKeepAliveClient
         final file = snapshot.data!;
         switch (model.type) {
           case MessageType.image:
-            return Column(children: [Image(key: ValueKey<String>(model.fileUuid!), image: MemoryImage(file.readAsBytesSync())), FileDownloader(file: file)]);
+            return Column(children: [CustomImageContainer(key: ValueKey<String>(model.fileUuid!), file: file), FileDownloader(file: file)]);
           case MessageType.video:
             return Column(children: [CustomVideoPlayer(key: ValueKey<String>(model.fileUuid!), data: file), FileDownloader(file: file)]);
           case MessageType.audio:

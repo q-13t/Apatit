@@ -37,7 +37,6 @@ class ChatsListState extends State<ChatsList> {
     super.initState();
     _scrollController.addListener(_loadMoreChats);
     _subscription = NetworkController.messageStreamController.stream.listen((message) async {
-      _logger.debug("Got message: $message");
       var data = jsonDecode(message.toString());
       final type = WSMType.values.firstWhere((e) => e.name == data['type'], orElse: () => WSMType.error);
       switch (type) {

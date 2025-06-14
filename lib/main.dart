@@ -52,6 +52,8 @@ class Main extends State<MyApp> {
   String timer = "0";
 
   final random = Random();
+
+  /// Generates a random uuid
   static String getUuid() => uuid.v4();
 
   List<String> uniqueEmojis = [
@@ -95,7 +97,7 @@ class Main extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    Logger.setLevel(2);
+    Logger.setLevel(1);
     NetworkController(navigatorCallback).init(timeout, timerCallback);
   }
 

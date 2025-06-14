@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:Apatite/utils/enums.dart';
 
 class MessageModel {
-  int? id;
+  int id;
   String? text;
   String? timeStamp;
   int sender;
@@ -15,16 +15,7 @@ class MessageModel {
 
   MessageType? type;
 
-  MessageModel({
-    this.id,
-    required this.sender,
-    this.fileUuid,
-    this.text,
-    this.status,
-    required this.chatId,
-    this.timeStamp,
-    this.type,
-  });
+  MessageModel({required this.id, required this.sender, this.fileUuid, this.text, this.status, required this.chatId, this.timeStamp, this.type});
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
@@ -45,53 +36,20 @@ class MessageModel {
   }
 
   String toJSON() {
-    return jsonEncode({
-      "id": id,
-      "user_id": sender,
-      "chat_id": chatId,
-      "text": text,
-      "status": status!.name,
-      "timeStamp": timeStamp,
-      "type": type,
-      "file_uuid": fileUuid,
-    });
+    return jsonEncode({"id": id, "user_id": sender, "chat_id": chatId, "text": text, "status": status!.name, "timeStamp": timeStamp, "type": type, "file_uuid": fileUuid});
   }
 
   Map<String, dynamic> toDynamic() {
-    return {
-      "id": id,
-      "user_id": sender,
-      "chat_id": chatId,
-      "text": text,
-      "status": status!.name,
-      "timeStamp": timeStamp,
-      "type": type!.name,
-      "file_uuid": fileUuid,
-    };
+    return {"id": id, "user_id": sender, "chat_id": chatId, "text": text, "status": status!.name, "timeStamp": timeStamp, "type": type!.name, "file_uuid": fileUuid};
   }
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is MessageModel &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          status == other.status &&
-          text == other.text; // etc
+  bool operator ==(Object other) => identical(this, other) || other is MessageModel && runtimeType == other.runtimeType && id == other.id && status == other.status && text == other.text; // etc
 
   @override
   int get hashCode => id.hashCode ^ status.hashCode ^ text.hashCode ^ timeStamp.hashCode;
 
-  MessageModel copyWith({
-    int? id,
-    int? sender,
-    String? text,
-    MessageStatus? status,
-    String? timeStamp,
-    MessageType? type,
-    String? fileUuid,
-    int? chatId,
-  }) {
+  MessageModel copyWith({int? id, int? sender, String? text, MessageStatus? status, String? timeStamp, MessageType? type, String? fileUuid, int? chatId}) {
     return MessageModel(
       id: id ?? this.id,
       sender: sender ?? this.sender,

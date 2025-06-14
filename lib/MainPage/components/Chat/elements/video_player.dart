@@ -76,6 +76,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
 
   @override
   void dispose() {
+    _controller.pause();
     _controller.dispose();
     _hideTimer?.cancel();
     super.dispose();
@@ -91,32 +92,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> with AutomaticKee
             alignment: Alignment.center,
             children: [
               AspectRatio(aspectRatio: _controller.value.aspectRatio, child: VideoPlayer(_controller)),
-              if (_showControls)
-                Container(
-                  color: Colors.black45,
-                  child: IconButton(
-                    iconSize: 60,
-                    icon: Icon(
-                      _controller.value.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                      color: Colors.white,
-                    ),
-                    onPressed: _togglePlayPause,
-                  ),
-                ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: VideoProgressIndicator(
-                  _controller,
-                  allowScrubbing: true,
-                  colors: VideoProgressColors(
-                    playedColor: Colors.cyan,
-                    backgroundColor: Colors.white24,
-                    bufferedColor: Colors.white38,
-                  ),
-                ),
-              ),
+              if (_showControls) Container(color: Colors.black45, child: IconButton(iconSize: 60, icon: Icon(_controller.value.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill, color: Colors.white), onPressed: _togglePlayPause)),
+              Positioned(bottom: 0, left: 0, right: 0, child: VideoProgressIndicator(_controller, allowScrubbing: true, colors: VideoProgressColors(playedColor: Colors.cyan, backgroundColor: Colors.white24, bufferedColor: Colors.white38))),
             ],
           ),
         )

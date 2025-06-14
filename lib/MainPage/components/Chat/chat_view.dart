@@ -52,12 +52,11 @@ class ChatViewState extends State<ChatView> {
   void initState() {
     super.initState();
     _messagesNotifiers = ValueNotifier<List<ValueNotifier<MessageModel>>>([]);
-    _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
+    _mineCurrent = MessageModel(id: -1, sender: NetworkController.me.id, chatId: widget.model.id);
     _displayScrollToBottom = ValueNotifier<bool>(false);
 
     NetworkController.getParticipants(widget.model.id).then((res) async {
       var jsonList = jsonDecode(res);
-      ChatView._logger.debug("Participants: $jsonList");
 
       for (var u in jsonList) {
         if (u['pfp_uuid'] != null) {
@@ -113,18 +112,19 @@ class ChatViewState extends State<ChatView> {
             {
               final newList = List<MessageModel>.generate(data['messages'].length, (i) => MessageModel.fromJson(data['messages'][i]));
               final newNotifiers = newList.map((m) => ValueNotifier<MessageModel>(m));
-
-              _messagesNotifiers.value.insertAll(0, newNotifiers);
-              lastLoad = newList.length;
-              _messagesNotifiers.notifyListeners();
+              setState(() {
+                _messagesNotifiers.value.insertAll(0, newNotifiers);
+                lastLoad = newList.length;
+              });
               break;
             }
 
           case WSMType.newMessage:
             {
               final incoming = MessageModel.fromJson(jsonDecode(data['data']));
-              _messagesNotifiers.value.insert(0, ValueNotifier<MessageModel>(incoming));
-              _messagesNotifiers.notifyListeners();
+              setState(() {
+                _messagesNotifiers.value.insert(0, ValueNotifier<MessageModel>(incoming));
+              });
               break;
             }
 
@@ -139,8 +139,9 @@ class ChatViewState extends State<ChatView> {
           case WSMType.sendMessage:
             {
               final sent = MessageModel.fromJson(jsonDecode(data['data']));
-              _messagesNotifiers.value.insert(0, ValueNotifier<MessageModel>(sent));
-              _messagesNotifiers.notifyListeners();
+              setState(() {
+                _messagesNotifiers.value.insert(0, ValueNotifier<MessageModel>(sent));
+              });
               break;
             }
 
@@ -184,7 +185,6 @@ class ChatViewState extends State<ChatView> {
   }
 
   Future<bool> dispatchMessage() async {
-    ChatView._logger.debug("Message: ${_mineCurrent.toDynamic()}");
     if (_mineCurrent.data != null) {
       final res = await NetworkController.uploadFile(_mineCurrent.data!, _mineCurrent.fileUuid!);
       if (res != 200) return false;
@@ -197,7 +197,6 @@ class ChatViewState extends State<ChatView> {
   }
 
   void sendMessage() async {
-    ChatView._logger.debug("Messages: $myInput");
     if ((_mineCurrent.text == null || _mineCurrent.text!.isEmpty) && _mineCurrent.fileUuid == null) return;
 
     _mineCurrent.timeStamp = formatTimestamp();
@@ -208,7 +207,7 @@ class ChatViewState extends State<ChatView> {
 
     await dispatchMessage();
 
-    _mineCurrent = MessageModel(sender: NetworkController.me.id, chatId: widget.model.id);
+    _mineCurrent = MessageModel(id: -1, sender: NetworkController.me.id, chatId: widget.model.id);
     _textController.clear();
     clearFileSelection();
   }
@@ -238,7 +237,6 @@ class ChatViewState extends State<ChatView> {
   }
 
   MessageType resolveMessageType(String extension) {
-    ChatView._logger.debug("Resolving extension: $extension");
     switch (extension) {
       case ".mp4":
       case ".mov":
@@ -270,7 +268,6 @@ class ChatViewState extends State<ChatView> {
 
   @override
   void dispose() {
-    ChatView._logger.debug("Disposing chat view");
     for (var notifier in _messagesNotifiers.value) {
       notifier.dispose();
     }
@@ -311,29 +308,37 @@ class ChatViewState extends State<ChatView> {
                       if (notifiers.isEmpty) {
                         return const WowSoEmpty();
                       }
-                      return ListView.builder(
+                      return ListView.custom(
                         reverse: true,
-                        controller: _scrollController,
-                        itemCount: notifiers.length,
-                        itemBuilder: (context, index) {
-                          final messageNotifier = notifiers[index];
-                          return ValueListenableBuilder<MessageModel>(
-                            valueListenable: messageNotifier,
-                            builder: (context, message, __) {
-                              return VisibilityDetector(
-                                key: ValueKey<int>(message.id ?? 0),
-                                onVisibilityChanged: (info) {
-                                  if (info.visibleFraction >= 0.5 && message.status == MessageStatus.delivered && message.sender != NetworkController.me.id) {
-                                    final updated = message.copyWith(status: MessageStatus.seen);
-                                    messageNotifier.value = updated;
-                                    NetworkController.websocketSend(updated.toDynamic(), WSMType.updateMessage);
-                                  }
-                                },
-                                child: MessageTile(key: ValueKey<int>(message.id ?? 0), message: message),
-                              );
-                            },
-                          );
-                        },
+                        childrenDelegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final notifier = _messagesNotifiers.value[index];
+                            // return MessageTile(key: ValueKey('msg-${message.value.id}'), message: message.value);
+                            return ValueListenableBuilder<MessageModel>(
+                              valueListenable: notifier,
+                              key: ValueKey('msg-${notifier.value.id}'),
+                              builder: (context, message, __) {
+                                return VisibilityDetector(
+                                  key: ValueKey('msg-${message.id}'),
+                                  onVisibilityChanged: (info) {
+                                    if (info.visibleFraction >= 0.5 && message.status == MessageStatus.delivered && message.sender != NetworkController.me.id) {
+                                      final updated = message.copyWith(status: MessageStatus.seen);
+                                      notifier.value = updated;
+                                      NetworkController.websocketSend(updated.toDynamic(), WSMType.updateMessage);
+                                    }
+                                  },
+                                  child: MessageTile(key: ValueKey('msg-${message.id}'), message: message),
+                                );
+                              },
+                            );
+                          },
+                          childCount: _messagesNotifiers.value.length,
+                          findChildIndexCallback: (Key key) {
+                            final id = (key as ValueKey).value.split('-').last;
+                            var index = _messagesNotifiers.value.indexWhere((m) => m.value.id.toString() == id);
+                            return index;
+                          },
+                        ),
                       );
                     },
                   ),
@@ -368,10 +373,9 @@ class ChatViewState extends State<ChatView> {
           ValueListenableBuilder(
             valueListenable: _displayScrollToBottom,
             builder: (context, value, child) {
-              return Visibility(visible: value, child: Positioned(bottom: 75, right: 20, child: FloatingActionButton(onPressed: scrollToBottom, child: const Icon(Icons.arrow_downward))));
+              return Visibility(visible: value, child: Positioned(bottom: 75, right: 20, child: FloatingActionButton(heroTag: Main.getUuid(), onPressed: scrollToBottom, child: const Icon(Icons.arrow_downward))));
             },
           ),
-          // Positioned(bottom: 75, right: 20, child: _displayScrollToBottom ? FloatingActionButton(onPressed: scrollToBottom, child: const Icon(Icons.arrow_downward)) : Container()),
         ],
       ),
     );

@@ -39,7 +39,6 @@ class _NewChatControllerState extends State<NewChatController> {
     _subscription = NetworkController.messageStreamController.stream.listen((message) {
       var data = jsonDecode(message.toString());
       if (data['type'] == WSMTWrapper[WSMType.getUsersByName]) {
-        // _logger.debug("Got users: ${data['users']}");
         var list = List.generate(data['users'].length, (index) => UserTileModel.fromMap(data['users'][index]));
         lastLoad = list.length;
         usersNotifier.value += list;
