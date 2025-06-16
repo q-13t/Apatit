@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:latest
+    container_name: Anthracite-DB
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: Chat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+    restart: always
+    networks:
+      - server-network
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+
+  spring-app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: springio/gs-spring-boot-docker:latest
+    volumes:
+      - ./target:/target
+      - ./files:/app/files
+    ports:
+      - "192.168.137.1:3030:8080"
+      - "192.168.137.1:3031:8081"
+    restart: always
+    container_name: Anthracite-Server
+    networks:
+      - server-network
+    environment:
+      - spring.datasource.url=jdbc:postgresql://database:5432/Chat
+      - spring.datasource.username=postgres
+      - spring.datasource.password=12345
+
+networks:
+  server-network:
+    driver: bridge

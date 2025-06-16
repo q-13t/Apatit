@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,12 +17,29 @@ import edu.chat.Exceptions.InvalidFileException;
 public class FileOperator {
     @SuppressWarnings("unused")
     private static Logger log = LogManager.getLogger(FileOperator.class.getName());
-    private static File root = new File("src/main/resources/files/");
+
+    @Value("${files.root}")
+    private static String rootPath;
+
+    private static File root;
+
+    FileOperator() {
+        if (rootPath == null) {
+            rootPath = "/app/files/";
+        }
+        root = new File(rootPath);
+    }
 
     public static byte[] getFile(String uuid) throws InvalidFileException, IOException {
         // log.info("Absolute Path: " + root.getAbsolutePath());
         if (!root.exists()) {
-            root.mkdir();
+            boolean res = root.mkdir();
+            ;
+            if (!res) {
+                log.error("Root directory could not be created");
+            } else {
+                log.info("Root directory created");
+            }
             throw new FileNotFoundException();
         }
         byte[] allBytes = Files.readAllBytes(Paths.get(root.getAbsolutePath(), uuid));
@@ -31,7 +49,12 @@ public class FileOperator {
 
     public static boolean storeFile(MultipartFile file) throws IOException, InvalidFileException {
         if (!root.exists()) {
-            root.mkdir();
+            boolean res = root.mkdir();
+            if (!res) {
+                log.error("Root directory could not be created");
+            } else {
+                log.info("Root directory created");
+            }
             throw new FileNotFoundException();
         }
         log.info("Storing file: " + file.getOriginalFilename());

@@ -16,6 +16,7 @@ import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -61,9 +62,12 @@ public class WEBSocketController extends WebSocketServer {
     public WEBSocketController() {
     }
 
+    @Value("${websocket.port}")
+    private int port;
+
     @Bean
-    public WEBSocketController initController() {
-        WEBSC = new WEBSocketController(new InetSocketAddress(serverProperties.getAddress(), 8081));
+    WEBSocketController initController() {
+        WEBSC = new WEBSocketController(new InetSocketAddress(serverProperties.getAddress(), port));
         WEBSC.setConnectionLostTimeout(60_000);
         WEBSC.start();
         Thread connectionStatusThread = new Thread("WEBSocketConnectionStatusThread") {
