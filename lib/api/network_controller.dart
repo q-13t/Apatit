@@ -124,15 +124,15 @@ class NetworkController {
       },
       onError: (error) async {
         ToastService.showToast('Network error: $error');
-        instance.returnToRoot!();
-        await _prefs.setString('token', jwtNotifier.value ?? '');
         await setToken(null);
+        await _prefs.setString('token', jwtNotifier.value ?? '');
+        instance.returnToRoot!();
       },
       onDone: () async {
         ToastService.showToast('No Connection To The Server');
-        instance.returnToRoot!();
-        await _prefs.setString('token', jwtNotifier.value ?? '');
         await setToken(null);
+        await _prefs.setString('token', jwtNotifier.value ?? '');
+        instance.returnToRoot!();
       },
     );
   }
@@ -175,7 +175,7 @@ class NetworkController {
       return http.Response('Error', 500);
     });
     if (response.statusCode != 200) {
-      ToastService.showToast(jsonDecode(response.body)['error']);
+      ToastService.showToast(response.body);
       return false;
     }
     await setToken(jsonDecode(response.body)['token']);

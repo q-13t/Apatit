@@ -108,6 +108,7 @@ class Main extends State<MyApp> {
 
   void navigatorCallback() {
     Navigator.popUntil(context, ModalRoute.withName('/'));
+    NetworkController(navigatorCallback).init(timeout, timerCallback);
   }
 
   void timerCallback(String update) {
