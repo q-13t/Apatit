@@ -3,6 +3,7 @@ application.properties
 target/
 *.class
 src/main/resources/files/
+files/
 
 # Ignore Eclipse files
 .classpath

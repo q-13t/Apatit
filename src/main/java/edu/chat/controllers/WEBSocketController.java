@@ -224,6 +224,16 @@ public class WEBSocketController extends WebSocketServer {
             }
             case newChatPrivate: {
                 response = webSocketService.prepareNewChatPrivateResponse(requestType, data);
+
+                JsonObject user = userService.getUserByID(data.get("user1").getAsInt()).toJson();
+                JsonObject chat = chatService.getByID(response.get("chat_id").getAsInt()).toJson();
+                user.remove("password");
+
+                JsonObject preparedData = new JsonObject();
+                preparedData.addProperty("user", user.toString());
+                preparedData.addProperty("chat", chat.toString());
+                dispatchToUser(preparedData, data.get("user1").getAsInt(), WEBSocketRequestType.addParticipant);
+                dispatchToUser(preparedData, data.get("user2").getAsInt(), WEBSocketRequestType.addParticipant);
                 break;
             }
             case getChats: {
@@ -278,12 +288,31 @@ public class WEBSocketController extends WebSocketServer {
                 break;
             }
 
-            case addParticipant:
+            case addParticipant: {
+                JsonObject user = userService.getUserByID(data.get("user_id").getAsInt()).toJson();
+                JsonObject chat = chatService.getByID(data.get("chat_id").getAsInt()).toJson();
+                user.remove("password");
+                participantsRouts.addParticipant(data.get("chat_id").getAsInt(), data.get("user_id").getAsInt());
+                JsonObject preparedData = new JsonObject();
+                preparedData.addProperty("user", user.toString());
+                preparedData.addProperty("chat", chat.toString());
+
+                dispatchToChatExcluding(preparedData, data.get("chat_id").getAsInt(), requestType, new ArrayList<>() {
+                    {
+                        add(data.get("sender_id").getAsInt());
+                    }
+                });
+                dispatchToUser(preparedData, data.get("user_id").getAsInt(), requestType);
+
+                response.addProperty("data", preparedData.toString());
+                response.addProperty("type", requestType.toString());
+                break;
+            }
             case removeParticipant: {
                 JsonObject user = userService.getUserByID(data.get("user_id").getAsInt()).toJson();
                 JsonObject chat = chatService.getByID(data.get("chat_id").getAsInt()).toJson();
                 user.remove("password");
-
+                participantsRouts.removeParticipant(data.get("chat_id").getAsInt(), data.get("user_id").getAsInt());
                 JsonObject preparedData = new JsonObject();
                 preparedData.addProperty("user", user.toString());
                 preparedData.addProperty("chat", chat.toString());
