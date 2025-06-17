@@ -289,7 +289,7 @@ class ChatViewState extends State<ChatView> {
             Text(widget.model.name),
           ],
         ),
-        leading: IconButton(onPressed: () => Navigator.pop(context, (_) => {setState(() {})}), icon: const Icon(Icons.arrow_back)),
+        leading: IconButton(onPressed: () => Navigator.popUntil(context, ModalRoute.withName('/')), icon: const Icon(Icons.arrow_back)),
 
         actions: <Widget>[
           IconButton(onPressed: () => Navigator.pushNamed(context, '/chatSettings', arguments: {'model': widget.model}), icon: const Icon(Icons.settings)),

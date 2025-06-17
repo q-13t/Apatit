@@ -21,8 +21,8 @@ class NetworkController {
   static bool _initialized = false;
   static String? token;
   static WebSocketChannel? _channel;
-  static String baseUrlHttp = '192.168.137.1:8080';
-  static String baseUrlWebSocket = 'ws://192.168.137.1:8081';
+  static String baseUrlHttp = '192.168.137.1:3030';
+  static String baseUrlWebSocket = 'ws://192.168.137.1:3031';
   static final ValueNotifier<String?> jwtNotifier = ValueNotifier(null);
   static final messageStreamController = StreamController<String>.broadcast();
   static final Map<String, Uint8List?> _pfpCache = {};

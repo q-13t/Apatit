@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:Apatite/MainPage/components/Chat/chat_view.dart';
 import 'package:Apatite/MainPage/components/empty_widget.dart';
 import 'package:Apatite/MainPage/components/new_chat/user_tile.dart';
 import 'package:Apatite/MainPage/main_page_controller.dart';
@@ -44,18 +45,21 @@ class _NewChatControllerState extends State<NewChatController> {
         usersNotifier.value += list;
       }
     });
-    NetworkController.messageStreamController.stream.listen((message) {
-      var data = jsonDecode(message.toString());
-      if (data['type'] == WSMTWrapper[WSMType.newChatPrivate]) {
-        _logger.debug("Got new chat: ${data['chat_id']}");
-        if (data['chat_id'] == null || data['id'] == -1) {
-          ToastService.showToast('Chat not created');
-        } else {
-          MainPageControllerState.chatData = ChatTileModel(id: data['chat_id'], name: data['name']);
-          MainPageControllerState.currentPage.value = Pages.chat;
-        }
+    NetworkController.messageStreamController.stream.listen(handleNewChat);
+  }
+
+  void handleNewChat(message) {
+    var data = jsonDecode(message.toString());
+    if (data['type'] == WSMTWrapper[WSMType.newChatPrivate]) {
+      _logger.debug("Got new chat: ${data['chat_id']}");
+      if (data['chat_id'] == null || data['id'] == -1) {
+        ToastService.showToast('Chat not created');
+      } else {
+        MainPageControllerState.chatData = ChatTileModel(id: data['chat_id'], name: data['name']);
+        Navigator.popUntil(context, ModalRoute.withName('/'));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ChatView(model: MainPageControllerState.chatData)));
       }
-    });
+    }
   }
 
   void _loadMoreUsers() {
