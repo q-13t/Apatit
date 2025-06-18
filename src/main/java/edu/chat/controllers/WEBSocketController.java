@@ -225,14 +225,18 @@ public class WEBSocketController extends WebSocketServer {
             case newChatPrivate: {
                 response = webSocketService.prepareNewChatPrivateResponse(requestType, data);
 
-                JsonObject user = userService.getUserByID(data.get("user1").getAsInt()).toJson();
+                JsonObject user_1 = userService.getUserByID(data.get("user1").getAsInt()).toJson();
+                JsonObject user_2 = userService.getUserByID(data.get("user2").getAsInt()).toJson();
                 JsonObject chat = chatService.getByID(response.get("chat_id").getAsInt()).toJson();
-                user.remove("password");
+                user_1.remove("password");
+                user_2.remove("password");
 
                 JsonObject preparedData = new JsonObject();
-                preparedData.addProperty("user", user.toString());
                 preparedData.addProperty("chat", chat.toString());
+                preparedData.addProperty("user", user_1.toString());
                 dispatchToUser(preparedData, data.get("user1").getAsInt(), WEBSocketRequestType.addParticipant);
+                preparedData.remove("user");
+                preparedData.addProperty("user", user_2.toString());
                 dispatchToUser(preparedData, data.get("user2").getAsInt(), WEBSocketRequestType.addParticipant);
                 break;
             }
@@ -283,9 +287,7 @@ public class WEBSocketController extends WebSocketServer {
                 int chat_id = data.get("chat_id").getAsInt();
                 JsonObject chat = chatService.getByID(chat_id).toJson();
                 dispatchUpdate(chat, chat_id, requestType);
-                response.addProperty("data", chat.toString());
-                response.addProperty("type", requestType.toString());
-                break;
+                return;
             }
 
             case addParticipant: {

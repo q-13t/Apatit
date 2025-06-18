@@ -18,19 +18,13 @@ public class FileOperator {
     @SuppressWarnings("unused")
     private static Logger log = LogManager.getLogger(FileOperator.class.getName());
 
-    @Value("${files.root}")
-    private static String rootPath;
+    private final File root;
 
-    private static File root;
-
-    FileOperator() {
-        if (rootPath == null) {
-            rootPath = "/app/files/";
-        }
-        root = new File(rootPath);
+    FileOperator(@Value("${files.path:/app/files/}") String path) {
+        root = new File(path);
     }
 
-    public static byte[] getFile(String uuid) throws InvalidFileException, IOException {
+    public byte[] getFile(String uuid) throws InvalidFileException, IOException {
         // log.info("Absolute Path: " + root.getAbsolutePath());
         if (!root.exists()) {
             boolean res = root.mkdir();
@@ -47,7 +41,7 @@ public class FileOperator {
         return allBytes;
     }
 
-    public static boolean storeFile(MultipartFile file) throws IOException, InvalidFileException {
+    public boolean storeFile(MultipartFile file) throws IOException, InvalidFileException {
         if (!root.exists()) {
             boolean res = root.mkdir();
             if (!res) {

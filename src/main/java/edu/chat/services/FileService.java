@@ -1,5 +1,6 @@
 package edu.chat.services;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,10 +13,13 @@ import edu.chat.utils.FileOperator;
 @Service
 public class FileService {
 
+    @Autowired
+    FileOperator fileOperator;
+
     public ResponseEntity<String> performFileSave(MultipartFile file) {
         JsonObject response = new JsonObject();
         try {
-            FileOperator.storeFile(file);
+            fileOperator.storeFile(file);
         } catch (Exception e) {
             response.addProperty("success", false);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response.toString());
@@ -26,7 +30,7 @@ public class FileService {
 
     public byte[] performGetFile(String uuid) {
         try {
-            return FileOperator.getFile(uuid);
+            return fileOperator.getFile(uuid);
         } catch (Exception e) {
             return null;
         }

@@ -46,6 +46,9 @@ public class WEBSocketService {
     private MessageRoutes messageRoutes;
 
     @Autowired
+    private FileOperator fileOperator;
+
+    @Autowired
     private ParticipantsRouts participantsRouts;
 
     // WEBSocketService(MessageService messageService) {
@@ -90,7 +93,7 @@ public class WEBSocketService {
         String pfpUUID = user.getPfpUUID();
         String payload;
         if (pfpUUID != null && pfpUUID != "") {
-            payload = Base64.getEncoder().encodeToString(FileOperator.getFile(pfpUUID));
+            payload = Base64.getEncoder().encodeToString(fileOperator.getFile(pfpUUID));
         } else {
             payload = "null";
         }
