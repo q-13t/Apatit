@@ -2,7 +2,7 @@
 Apatite is a combination of Spring Boot backend and Flutter front end to provide a chat application.
 
 This is a backend portion of the project.
-You can navigate to the back end  by clicking [here](https://github.com/q-13t/Apatite/tree/Java-Backend).
+You can navigate to the back end  by clicking [here](https://github.com/q-13t/Apatite-Server).
 
 # 🚨 Caution 🚨
 This is a pet project and should not be taken as a serious product and\or tutorial for learning Flutter. Feel free to look at the code but be cautious that it was written by an amateur. And it definitely has bugs.
@@ -49,7 +49,7 @@ https://github.com/user-attachments/assets/759b5d31-f4b3-4b74-866b-fc4e5d50bfe3
 
 
 ## Messages
-The messages are transmitted using websocket (see [backend](https://github.com/q-13t/Apatite/tree/Java-Backend)) for real time communication. The message is dispatched to the other participants only once it has been added to the database. The app provides a scrollable mechanism with message limitation for ram preservation. Thus if the new message is added whilst user is up or user is not in the app the message will have status sent. Once recipient reads the message the status will be updated to all users correspondingly.
+The messages are transmitted using websocket (see [backend](https://github.com/q-13t/Apatite-Server)) for real time communication. The message is dispatched to the other participants only once it has been added to the database. The app provides a scrollable mechanism with message limitation for ram preservation. Thus if the new message is added whilst user is up or user is not in the app the message will have status sent. Once recipient reads the message the status will be updated to all users correspondingly.
 
 
 https://github.com/user-attachments/assets/4a5ea853-f570-4547-ac4b-08a71e7a49e3
