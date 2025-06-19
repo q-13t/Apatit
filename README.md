@@ -2,7 +2,7 @@
 Apatite is a combination of Spring Boot backend and Flutter front end to provide a chat application.
 
 This is a backend portion of the project.
-You can navigate to the front end  by clicking [here](https://github.com/q-13t/Apatite/tree/Apk).
+You can navigate to the front end  by clicking [here](https://github.com/q-13t/Apatite-Server).
 
 # 🚨 Caution 🚨
 This is a pet project and should not be taken as a serious product and\or tutorial for learning Java Spring. Feel free to look at the code but be cautious that it was written by an amateur. And it definitely has bugs.
