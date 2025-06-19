@@ -40,9 +40,9 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  void updateUserData() {
+  Future<void> updateUserData() async {
     if (_newUserName != '' && _newUserName != NetworkController.me.username) {
-      NetworkController.updateUsername(_newUserName).then((status) {
+      await NetworkController.updateUsername(_newUserName).then((status) {
         if (status == 200) {
           ToastService.showToast('Username updated');
         } else {
@@ -101,7 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
             NetworkController.me.pfp = data;
             return CircleAvatar(child: ClipRRect(borderRadius: BorderRadius.circular(100), child: Image.memory(data!)));
           } else {
-            return CircularProgressIndicator();
+            return CircleAvatar(child: Icon(Icons.person));
           }
         },
       );
@@ -111,12 +111,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   clearCache() {
-    NetworkController.tempDir
-        .delete(recursive: true)
-        .then((value) => ToastService.showToast('Cache cleared'))
-        .catchError((e) {
-          ToastService.showToast(e.toString());
-        });
+    NetworkController.tempDir.delete(recursive: true).then((value) => ToastService.showToast('Cache cleared')).catchError((e) {
+      ToastService.showToast(e.toString());
+    });
   }
 
   @override
@@ -133,10 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     width: MediaQuery.of(context).size.width,
                     child: GestureDetector(
                       onTap: () async {
-                        final pickedFile = await picker.pickImage(
-                          source: ImageSource.gallery,
-                          preferredCameraDevice: CameraDevice.front,
-                        );
+                        final pickedFile = await picker.pickImage(source: ImageSource.gallery, preferredCameraDevice: CameraDevice.front);
                         if (pickedFile == null) {
                           return;
                         }
@@ -146,14 +140,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           compressQuality: 40,
                           aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
                           uiSettings: [
-                            AndroidUiSettings(
-                              toolbarTitle: 'Crop Image',
-                              backgroundColor: Color.fromARGB(169, 0, 0, 0),
-                              toolbarWidgetColor: Colors.black,
-                              cropStyle: CropStyle.circle,
-                              initAspectRatio: CropAspectRatioPreset.original,
-                              lockAspectRatio: false,
-                            ),
+                            AndroidUiSettings(toolbarTitle: 'Crop Image', backgroundColor: Color.fromARGB(169, 0, 0, 0), toolbarWidgetColor: Colors.black, cropStyle: CropStyle.circle, initAspectRatio: CropAspectRatioPreset.original, lockAspectRatio: false),
                           ],
                           sourcePath: pickedFile.path,
                         );
@@ -164,18 +151,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: buildImage(),
                     ),
                   ),
-                  TextField(
-                    decoration: InputDecoration(hintText: 'Enter Username', border: OutlineInputBorder()),
-                    onChanged: (value) => {_newUserName = value},
-                  ),
-                  TextField(
-                    decoration: InputDecoration(hintText: 'Enter New Password', border: OutlineInputBorder()),
-                    onChanged: (value) => {_newPassword = value},
-                  ),
-                  TextField(
-                    decoration: InputDecoration(hintText: 'Enter Old Password', border: OutlineInputBorder()),
-                    onChanged: (value) => {_oldPassword = value},
-                  ),
+                  TextField(decoration: InputDecoration(hintText: 'Enter Username', border: OutlineInputBorder()), onChanged: (value) => {_newUserName = value}),
+                  TextField(decoration: InputDecoration(hintText: 'Enter New Password', border: OutlineInputBorder()), onChanged: (value) => {_newPassword = value}),
+                  TextField(decoration: InputDecoration(hintText: 'Enter Old Password', border: OutlineInputBorder()), onChanged: (value) => {_oldPassword = value}),
                 ],
               ),
             ),
@@ -186,11 +164,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Expanded(
               child: ElevatedButton(
                 onPressed: () => {clearCache()},
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(Colors.redAccent[200]),
-                  iconColor: WidgetStateProperty.all(Colors.black),
-                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                ),
+                style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Colors.redAccent[200]), iconColor: WidgetStateProperty.all(Colors.black), shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)))),
                 child: Column(children: [Icon(Icons.delete_forever), Text('Clear Cache')]),
               ),
             ),
@@ -201,10 +175,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Expanded(
               child: ElevatedButton(
                 onPressed: () => {updateUserData()},
-                style: ButtonStyle(
-                  shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                  minimumSize: WidgetStateProperty.all(Size(60, 60)),
-                ),
+                style: ButtonStyle(shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))), minimumSize: WidgetStateProperty.all(Size(60, 60))),
                 child: Icon(Icons.save, size: 40),
               ),
             ),

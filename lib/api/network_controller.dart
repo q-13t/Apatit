@@ -268,12 +268,15 @@ class NetworkController {
     _logger.debug("updateUsername response: ${response.statusCode} - reason: ${response.body}");
     if (response.statusCode == 401) {
       ToastService.showToast('Unauthorized');
-      final secureStorage = FlutterSecureStorage();
-      NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     } else if (response.statusCode == 200) {
       _me.username = newUserName;
       final secureStorage = FlutterSecureStorage();
       await secureStorage.write(key: 'username', value: newUserName);
+      await login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
+      var me_json = await _getMe(jwtNotifier.value!);
+      _me = User.fromJson(jsonDecode(me_json));
+      websocketSend({"id": _me.id}, WSMType.bind);
+      await getFile(_me.pfpUuid).then((value) => _me.pfp = value?.readAsBytesSync());
     }
     return response.statusCode;
   }
@@ -285,11 +288,14 @@ class NetworkController {
     _logger.debug("updatePassword response: ${response.statusCode} - reason: ${response.body}");
     if (response.statusCode == 401) {
       ToastService.showToast('Unauthorized');
-      final secureStorage = FlutterSecureStorage();
-      NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     } else if (response.statusCode == 200) {
       final secureStorage = FlutterSecureStorage();
       await secureStorage.write(key: 'password', value: newPassword);
+      await login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
+      var me_json = await _getMe(jwtNotifier.value!);
+      _me = User.fromJson(jsonDecode(me_json));
+      websocketSend({"id": _me.id}, WSMType.bind);
+      await getFile(_me.pfpUuid).then((value) => _me.pfp = value?.readAsBytesSync());
     }
     return response.statusCode;
   }
@@ -300,10 +306,8 @@ class NetworkController {
     var response = await http.patch(url, headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${jwtNotifier.value}'}, body: data).onError((error, stackTrace) => http.Response('Error', 500));
     if (response.statusCode == 401) {
       ToastService.showToast('Unauthorized');
-      final secureStorage = FlutterSecureStorage();
-      NetworkController.login(await secureStorage.read(key: 'username'), await secureStorage.read(key: 'password'));
     } else if (response.statusCode == 200) {
-      _logger.err("updatePassword response: ${response.statusCode} - reason: ${response.body}");
+      _logger.err("updatePFP response: ${response.statusCode} - reason: ${response.body}");
       _me.pfpUuid = fileName;
       if (newPfp != null) _me.setPfp(newPfp.readAsBytesSync());
     }
